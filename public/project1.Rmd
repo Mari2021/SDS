@@ -1,7 +1,7 @@
 ---
 title: "Project 1: SDS 348 Project: 1 Exploratory Data Analysis" 
 by: "Yemariamwork Engidaw (yde68)"
-Date: "03/15/2020"
+Date: "2020-03-15"
 output:
   pdf_document: default
   html_document: default

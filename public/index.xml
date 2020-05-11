@@ -6,7 +6,7 @@
     <description>Recent content on Portfolio</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Sun, 02 Oct 2016 22:55:05 -0400</lastBuildDate>
+    <lastBuildDate>Sun, 03 May 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
@@ -22,6 +22,24 @@ Here are example of differences between R and Rython: After becoming very famili
     </item>
     
     <item>
+      <title>Project 2:Modeling,Testing,and Predicting</title>
+      <link>/project2/</link>
+      <pubDate>Sun, 03 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/project2/</guid>
+      <description>I have decided to use the CrohnD dataset from the package robustbase. This dataset provides information regarding the number of adverse events caused by a drug used to treat patients sufferring from Crohns disease.This is dataset is composed of 117 observations on 9 variables: ID (patient identifcation number),nrAdvE (number of adverse events), BMI (Body MASS Index), height (in cm), country (a factor with levels 0 and 1),sex, age, weight (in kilograms) and finally treat (how CD was treated: a factor with levels 0, 1 and 2, meaning placebo, drug 1 and drug 2.</description>
+    </item>
+    
+    <item>
+      <title>Project 1: SDS 348 Project: 1 Exploratory Data Analysis</title>
+      <link>/project1/</link>
+      <pubDate>Sun, 15 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/project1/</guid>
+      <description>Introduction: I will be using two different datasets from R-studio. The first dataset that I will be using is called bad_drivers. This dataset contains 51 observations and 8 variables. The 8 variables are num_drivers, perc_speeding (percent of drivers that were speeding), perc_alchol (percent of fatal collisons due to alcohol), perc_not_distracted (percent of drivers that were not distracted causing a fatal collison), perc_no_previous (percent of drivers with no previous fatal collisons), insurance_premiums, lossess (loss incured by insurance company).</description>
+    </item>
+    
+    <item>
       <title>Projects</title>
       <link>/projects/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
@@ -31,24 +49,6 @@ Here are example of differences between R and Rython: After becoming very famili
   Exploratory Data Analysis with Tidyverse Tools
   Modeling, Testing, and Classification
   </description>
-    </item>
-    
-    <item>
-      <title>Project 1: SDS 348 Project: 1 Exploratory Data Analysis</title>
-      <link>/project1/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/project1/</guid>
-      <description>Introduction: I will be using two different datasets from R-studio. The first dataset that I will be using is called bad_drivers. This dataset contains 51 observations and 8 variables. The 8 variables are num_drivers, perc_speeding (percent of drivers that were speeding), perc_alchol (percent of fatal collisons due to alcohol), perc_not_distracted (percent of drivers that were not distracted causing a fatal collison), perc_no_previous (percent of drivers with no previous fatal collisons), insurance_premiums, lossess (loss incured by insurance company).</description>
-    </item>
-    
-    <item>
-      <title>Project 2:Modeling,Testing,and Predicting</title>
-      <link>/project2/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/project2/</guid>
-      <description>I have decided to use the CrohnD dataset from the package robustbase. This dataset provides information regarding the number of adverse events caused by a drug used to treat patients sufferring from Crohns disease.This is dataset is composed of 117 observations on 9 variables: ID (patient identifcation number),nrAdvE (number of adverse events), BMI (Body MASS Index), height (in cm), country (a factor with levels 0 and 1),sex, age, weight (in kilograms) and finally treat (how CD was treated: a factor with levels 0, 1 and 2, meaning placebo, drug 1 and drug 2.</description>
     </item>
     
   </channel>

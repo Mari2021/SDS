@@ -1,7 +1,7 @@
 ---
 title: "Project 2:Modeling,Testing,and Predicting"
 author: "Yemariamwork Engidaw"
-date: "05/03/2020"
+date: "2020-05-03"
 output:
   pdf_document: default
   html_document: default
@@ -107,23 +107,23 @@ head(cron)</code></pre>
 <pre class="r"><code>head(perm1&lt;-data.frame(condition=cron$condition,adevent=sample(cron$adevent)))</code></pre>
 <pre><code>##   condition adevent
 ## 1   placebo       0
-## 2   placebo       2
-## 3   placebo       2
+## 2   placebo       4
+## 3   placebo       0
 ## 4   placebo       0
-## 5   placebo       0
-## 6   placebo       2</code></pre>
+## 5   placebo       2
+## 6   placebo       0</code></pre>
 <pre class="r"><code>perm1%&gt;%group_by(condition)%&gt;%summarize(means=mean(adevent))%&gt;%summarize(`mean_diff:`=diff(means))</code></pre>
 <pre><code>## # A tibble: 1 x 1
 ##   `mean_diff:`
 ##          &lt;dbl&gt;
-## 1         -0.6</code></pre>
+## 1          0.1</code></pre>
 <pre class="r"><code>rand_dist&lt;-vector()
 for(i in 1:5000){
 new&lt;-data.frame(adevent=sample(cron$adevent),condition=cron$condition)
 rand_dist[i]&lt;-mean(new[new$condition==&quot;d1&quot;,]$adevent)-
 mean(new[new$condition==&quot;placebo&quot;,]$adevent)}
 mean(rand_dist&gt;1.965542 | rand_dist&lt; -1.965542)</code></pre>
-<pre><code>## [1] 0.0038</code></pre>
+<pre><code>## [1] 0.0054</code></pre>
 <pre class="r"><code>{hist(rand_dist,main=&quot;&quot;,ylab=&quot;&quot;); abline(v = 1.965542,col=&quot;red&quot;)}</code></pre>
 <p><img src="/project2_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
 <pre class="r"><code>t.test(data=cron,adevent~condition)</code></pre>
@@ -333,7 +333,7 @@ coef(fit)
 })
 samp_distn%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
 <pre><code>##   (Intercept)        BMI      weight   BMI:weight
-## 1  0.02988295 0.01076596 0.003337542 0.0002082247</code></pre>
+## 1  0.03061301 0.01084088 0.003341042 0.0002018651</code></pre>
 <pre class="r"><code>fit2&lt;-lm(nrAdvE.cat~BMI*weight,data=CrohnD1)
 summary(fit2)</code></pre>
 <pre><code>## 
@@ -367,15 +367,15 @@ coef(fit2)
 })
 resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
 <pre><code>##   (Intercept)         BMI      weight   BMI:weight
-## 1  0.02876237 0.009073605 0.003164596 0.0002299999</code></pre>
+## 1  0.02810296 0.009260475 0.003183604 0.0002330787</code></pre>
 <pre class="r"><code>resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%gather%&gt;%group_by(key)%&gt;% summarize(lower=quantile(value,.025), upper=quantile(value,0.975))</code></pre>
 <pre><code>## # A tibble: 4 x 3
 ##   key             lower     upper
 ##   &lt;chr&gt;           &lt;dbl&gt;     &lt;dbl&gt;
-## 1 (Intercept)  0.0617    0.173   
-## 2 BMI          0.0204    0.0572  
-## 3 BMI:weight  -0.000717  0.000163
-## 4 weight      -0.0150   -0.00235</code></pre>
+## 1 (Intercept)  0.0619    0.172   
+## 2 BMI          0.0194    0.0575  
+## 3 BMI:weight  -0.000719  0.000205
+## 4 weight      -0.0151   -0.00218</code></pre>
 <pre class="r"><code>coeftest(fit2)[,1:2]</code></pre>
 <pre><code>##                  Estimate   Std. Error
 ## (Intercept)  0.1135856789 0.0290633392
@@ -390,10 +390,10 @@ resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
 ## BMI:weight  -0.0003378149 0.0001728742</code></pre>
 <pre class="r"><code>samp_distn%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
 <pre><code>##   (Intercept)        BMI      weight   BMI:weight
-## 1  0.02988295 0.01076596 0.003337542 0.0002082247</code></pre>
+## 1  0.03061301 0.01084088 0.003341042 0.0002018651</code></pre>
 <pre class="r"><code>resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
 <pre><code>##   (Intercept)         BMI      weight   BMI:weight
-## 1  0.02876237 0.009073605 0.003164596 0.0002299999</code></pre>
+## 1  0.02810296 0.009260475 0.003183604 0.0002330787</code></pre>
 <p>I did not observe any changes in SEs when this regression model was reran to compute bootstrapped standard error. Furthermore, there were no changes in the p-value since both regression models produced very similar outputs.</p>
 <pre class="r"><code>#5.Logistic Regression Model
 

@@ -1,7 +1,7 @@
 ---
 title: "Project 2:Modeling,Testing,and Predicting"
 author: "Yemariamwork Engidaw"
-date: "05/03/2020"
+date: "2020-05-03"
 output:
   pdf_document: default
   html_document: default
