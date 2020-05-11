@@ -1,0 +1,70 @@
+---
+title: Why Python Matters
+author: Yemariamwork Engidaw
+date: '2020-05-11'
+slug: why-python-matters
+categories: []
+tags: []
+description: ''
+---
+
+
+
+<p>The debate regarding “R versus Python” is one that is largely based on statistics versus CS/ML. Each language has its own advantages however, we can conclude that both languages are very useful and can actually work together.</p>
+<p>Here are example of differences between R and Rython:
+<img src="/blog/2020-05-11-why-python-matters_files/RvsPython.jpg" /></p>
+<p>After becoming very familiar with R all semester, learning about Python was quite interesting. We can use library(reticulate) to conduct some python coding in RStudio. Lets begin by trying out some basic codes.</p>
+<pre class="r"><code>#R code chunk
+library(reticulate)
+hi&lt;-&quot;Hello&quot;</code></pre>
+<pre class="python"><code>#Python code chunk
+hi=&quot;world&quot;
+print(r.hi,hi)  #access R-defined objects with r</code></pre>
+<pre><code>## Hello world</code></pre>
+<pre class="r"><code>#R code chunk
+cat(c(hi,py$hi))</code></pre>
+<pre><code>## Hello world</code></pre>
+<p>The core python data science stacks are the following:</p>
+<p>-Jupyter:interactive notebook</p>
+<p>-Numpy:numerical computing in Python</p>
+<p>-Matplotlib:plotting in Python</p>
+<p>-pandas: complex data structures for Python</p>
+<p>-SciPy:scientific Python tools</p>
+<p>-Scikit-learn:machine learning in Python</p>
+<p>We can import numpy in order to gain access to a suite of functions. This will alow us to perform basic calculations as well as assign values to variables. A basic understanding of python gives us access to a large pool of tools that we can use to analyze data and create simple functions.</p>
+<pre class="python"><code>import numpy as np
+x=np.array([1,2,3])
+x</code></pre>
+<pre><code>## array([1, 2, 3])</code></pre>
+<pre class="python"><code>print(x/2+1) #vectorized arithmetic</code></pre>
+<pre><code>## [1.5 2.  2.5]</code></pre>
+<pre class="python"><code>x.shape #size of array (attribute)</code></pre>
+<pre><code>## (3,)</code></pre>
+<p>Python is a very efficient language that allows us to run very complex codes as well. Gene sequencing can be conducted by using Python. We can create a function that takes a string of nucleotides as inputs and returns dictionary with all 3-mers presents in that string, and the number of times that each 3-mer occurs.</p>
+<pre class="python"><code>
+my_seq1 = &quot;ATCATCATG&quot;
+def count_kmers(read, k):
+    counts = {}
+    num_kmers = len(read) - k + 1
+    for i in range(num_kmers):
+        kmer = read[i:i+k]
+        if kmer not in counts:
+            counts[kmer] = 0
+        counts[kmer] += 1
+    return counts
+
+count_kmers(&quot;ATCATCATG&quot;,3)</code></pre>
+<pre><code>## {&#39;ATC&#39;: 2, &#39;TCA&#39;: 2, &#39;CAT&#39;: 2, &#39;ATG&#39;: 1}</code></pre>
+<pre class="python"><code>my_seq2 = &quot;CAGCCCAATCAGGCTCTACTGCCACTAAACTTACGCAGGATATATTTACGCCGACGTACT&quot;
+def count_kmers(read, k):
+    counts = {}
+    num_kmers = len(read) - k + 1
+    for i in range(num_kmers):
+        kmer = read[i:i+k]
+        if kmer not in counts:
+            counts[kmer] = 0
+        counts[kmer] += 1
+    return counts
+count_kmers(&quot;CAGCCCAATCAGGCTCTACTGCCACTAAACTTACGCAGGATATATTTACGCCGACGTACT&quot;,3)</code></pre>
+<pre><code>## {&#39;CAG&#39;: 3, &#39;AGC&#39;: 1, &#39;GCC&#39;: 3, &#39;CCC&#39;: 1, &#39;CCA&#39;: 2, &#39;CAA&#39;: 1, &#39;AAT&#39;: 1, &#39;ATC&#39;: 1, &#39;TCA&#39;: 1, &#39;AGG&#39;: 2, &#39;GGC&#39;: 1, &#39;GCT&#39;: 1, &#39;CTC&#39;: 1, &#39;TCT&#39;: 1, &#39;CTA&#39;: 2, &#39;TAC&#39;: 4, &#39;ACT&#39;: 4, &#39;CTG&#39;: 1, &#39;TGC&#39;: 1, &#39;CAC&#39;: 1, &#39;TAA&#39;: 1, &#39;AAA&#39;: 1, &#39;AAC&#39;: 1, &#39;CTT&#39;: 1, &#39;TTA&#39;: 2, &#39;ACG&#39;: 3, &#39;CGC&#39;: 2, &#39;GCA&#39;: 1, &#39;GGA&#39;: 1, &#39;GAT&#39;: 1, &#39;ATA&#39;: 2, &#39;TAT&#39;: 2, &#39;ATT&#39;: 1, &#39;TTT&#39;: 1, &#39;CCG&#39;: 1, &#39;CGA&#39;: 1, &#39;GAC&#39;: 1, &#39;CGT&#39;: 1, &#39;GTA&#39;: 1}</code></pre>
+<p>Python as you can see is amazing. There is no limit to what python can do!</p>

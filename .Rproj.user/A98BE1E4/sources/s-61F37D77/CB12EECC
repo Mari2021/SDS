@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1589232919432.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3125566403",
+    "id" : "CB12EECC",
+    "lastKnownWriteTime" : 1589239234,
+    "last_content_update" : 1589239234551,
+    "path" : "~/Desktop/website/content/blog/2020-05-11-why-python-matters.Rmd",
+    "project_path" : "content/blog/2020-05-11-why-python-matters.Rmd",
+    "properties" : {
+        "cursorPosition" : "54,266",
+        "last_setup_crc32" : "61F37D77814c9681",
+        "scrollLine" : "50"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
