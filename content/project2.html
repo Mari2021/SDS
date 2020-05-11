@@ -1,0 +1,637 @@
+---
+title: "Project 2:Modeling,Testing,and Predicting"
+author: "Yemariamwork Engidaw"
+date: "05/03/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+
+<p>I have decided to use the CrohnD dataset from the package robustbase. This dataset provides information regarding the number of adverse events caused by a drug used to treat patients sufferring from Crohns disease.This is dataset is composed of 117 observations on 9 variables: ID (patient identifcation number),nrAdvE (number of adverse events), BMI (Body MASS Index), height (in cm), country (a factor with levels 0 and 1),sex, age, weight (in kilograms) and finally treat (how CD was treated: a factor with levels 0, 1 and 2, meaning placebo, drug 1 and drug 2.)I have gone ahead and removed the variable ID from the dataset as it is not significant.</p>
+<pre class="r"><code>#1. MANOVA/ANOVA Test
+ggplot(CrohnD, aes(x = weight, y = BMI)) +
+  geom_point(alpha = .5) + geom_density_2d(h=2) + coord_fixed() + facet_wrap(~sex)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<pre class="r"><code>covmats&lt;-CrohnD%&gt;%group_by(sex)%&gt;%do(covs=cov(.[2:3]))
+for(i in 1:3){print(as.character(covmats$sex[i])); print(covmats$covs[i])}</code></pre>
+<pre><code>## [1] &quot;M&quot;
+## [[1]]
+##              BMI    height
+## BMI     22.02943 -56.47434
+## height -56.47434 202.06618
+## 
+## [1] &quot;F&quot;
+## [[1]]
+##              BMI    height
+## BMI    25.440941  1.634152
+## height  1.634152 37.280303
+## 
+## [1] NA
+## [[1]]
+## NULL</code></pre>
+<pre class="r"><code>man1&lt;-manova(cbind(weight,BMI)~sex, data=CrohnD)
+summary(man1)</code></pre>
+<pre><code>##            Df  Pillai approx F num Df den Df    Pr(&gt;F)    
+## sex         1 0.18203   12.684      2    114 1.062e-05 ***
+## Residuals 115                                             
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary.aov(man1)</code></pre>
+<pre><code>##  Response weight :
+##              Df  Sum Sq Mean Sq F value   Pr(&gt;F)   
+## sex           1  2121.3 2121.33  11.392 0.001006 **
+## Residuals   115 21413.6  186.21                    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response BMI :
+##              Df  Sum Sq Mean Sq F value Pr(&gt;F)
+## sex           1   15.94  15.941  0.6385 0.4259
+## Residuals   115 2871.12  24.966</code></pre>
+<pre class="r"><code>CrohnD%&gt;%group_by(sex)%&gt;%summarize(mean(weight),mean(BMI))</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   sex   `mean(weight)` `mean(BMI)`
+##   &lt;fct&gt;          &lt;dbl&gt;       &lt;dbl&gt;
+## 1 M               79.4        27.0
+## 2 F               67.3        25.9</code></pre>
+<pre class="r"><code>pairwise.t.test(CrohnD$weight, CrohnD$sex, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  CrohnD$weight and CrohnD$sex 
+## 
+##   M    
+## F 0.001
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(CrohnD$BMI, CrohnD$sex, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  CrohnD$BMI and CrohnD$sex 
+## 
+##   M   
+## F 0.43
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>CrohnD%&gt;%select(sex,weight,BMI)%&gt;%pivot_longer(-1,names_to=&#39;DV&#39;, values_to=&#39;measure&#39;)%&gt;%
+  ggplot(aes(sex,measure,fill=sex))+geom_bar(stat=&quot;summary&quot;)+geom_errorbar(stat=&quot;summary&quot;, width=.5)+
+  facet_wrap(~DV, nrow=2)+coord_flip()+ylab(&quot;&quot;)+theme(legend.position = &quot;none&quot;)</code></pre>
+<pre><code>## No summary function supplied, defaulting to `mean_se()`
+## No summary function supplied, defaulting to `mean_se()`
+## No summary function supplied, defaulting to `mean_se()`
+## No summary function supplied, defaulting to `mean_se()`</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-1-2.png" width="672" /></p>
+<p>The results of the MANOVA test produced a significant p-value as it was less that 0.05. This suggest that females and males in this study possess very a significantly different mean for weight and BMI.Since the result from the MANOVA test was significant, an ANOVA test was then ran. The mean weight and BMI values was also determined.There was a significant difference in mean weight between females and males, and this was determined by the ANOVA test which produced a p-value of 0.001006. On the other hand, the mean difference between male and female BMI was not very significant (p-value was 0.4259). Next, a post-hoc test was performed to find which groups differ however, since there are only two options for sex, we already know that each sex differs from one another.In regard to the ANOVA assumptions,the multivariate normality was violated for the female group. The ggplot produced shows that the DV for the female sex was not normally distributed. Since we have two numeric response variables and one categorical predictor variable (which also possess two levels), we would run one MANOVA and two ANOVA. As a result of the variables used, the type one error probability would be equal to alpha (0.05).</p>
+<pre class="r"><code> #2. Randomization Test
+placebo&lt;-c(4,1,2,0,6,8,0,2,2,0,0,1,1,0,0,12,0,2,5,1)
+d1&lt;-c(4,2,3,0,2,0,0,0,0,0,0,0,0,1,2,1,2,2,0,2)
+cron&lt;-data.frame(condition=c(rep(&quot;placebo&quot;,20),rep(&quot;d1&quot;,20)),adevent=c(placebo,d1))
+head(cron)</code></pre>
+<pre><code>##   condition adevent
+## 1   placebo       4
+## 2   placebo       1
+## 3   placebo       2
+## 4   placebo       0
+## 5   placebo       6
+## 6   placebo       8</code></pre>
+<pre class="r"><code>cron%&gt;%group_by(condition)%&gt;%summarize(s=sd(adevent))%&gt;%summarize(diff(s))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   `diff(s)`
+##       &lt;dbl&gt;
+## 1      1.97</code></pre>
+<pre class="r"><code>ggplot(cron,aes(adevent,fill=condition))+geom_histogram(bins=6.5)+facet_wrap(~condition,ncol=2)+theme(legend.position=&quot;none&quot;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<pre class="r"><code>head(perm1&lt;-data.frame(condition=cron$condition,adevent=sample(cron$adevent)))</code></pre>
+<pre><code>##   condition adevent
+## 1   placebo       0
+## 2   placebo       2
+## 3   placebo       2
+## 4   placebo       0
+## 5   placebo       0
+## 6   placebo       2</code></pre>
+<pre class="r"><code>perm1%&gt;%group_by(condition)%&gt;%summarize(means=mean(adevent))%&gt;%summarize(`mean_diff:`=diff(means))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   `mean_diff:`
+##          &lt;dbl&gt;
+## 1         -0.6</code></pre>
+<pre class="r"><code>rand_dist&lt;-vector()
+for(i in 1:5000){
+new&lt;-data.frame(adevent=sample(cron$adevent),condition=cron$condition)
+rand_dist[i]&lt;-mean(new[new$condition==&quot;d1&quot;,]$adevent)-
+mean(new[new$condition==&quot;placebo&quot;,]$adevent)}
+mean(rand_dist&gt;1.965542 | rand_dist&lt; -1.965542)</code></pre>
+<pre><code>## [1] 0.0038</code></pre>
+<pre class="r"><code>{hist(rand_dist,main=&quot;&quot;,ylab=&quot;&quot;); abline(v = 1.965542,col=&quot;red&quot;)}</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
+<pre class="r"><code>t.test(data=cron,adevent~condition)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  adevent by condition
+## t = -1.6951, df = 24.532, p-value = 0.1027
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  -2.881019  0.281019
+## sample estimates:
+##      mean in group d1 mean in group placebo 
+##                  1.05                  2.35</code></pre>
+<p>H0: Patients given the treatment d1 had no significantly different amount of adverse reactions than those given a placebo.
+Ha: Patients given the treatment d1 had a significnatly different mean number of adverse reactions than those given a placebo.
+In order to conduct this randomization test, I first created two new vectors. The first vector contained 20 observations of adverse events in patients that recieved the placebo while the second vector contained 20 obsevations of adverse events in patient that recieved the d1 treatment. The actual mean difference between the two group was determind to be 1.965. When the observations were split into a random group (permutation #1), the mean difference between the two groups was 0.6 (very small). The two-tailed p-value was computed to be around 0.0044 (significant). When I computed the Welch t-test, the p-value produced was 0.1027 which is insignificant as it is greater then 0.05 (this would suggest that we accept the null).</p>
+<pre class="r"><code>3. #Linear Regression model</code></pre>
+<pre><code>## [1] 3</code></pre>
+<pre class="r"><code>library(lmtest)
+
+cat &lt;- CrohnD[order(CrohnD$nrAdvE),]
+nrAdvE.new &lt;- cut(CrohnD$nrAdvE, breaks=2, labels=c(&quot;low&quot;,&quot;high&quot;))
+head(nrAdvE.new)</code></pre>
+<pre><code>## [1] low low low low low low
+## Levels: low high</code></pre>
+<pre class="r"><code>CrohnD$nrAdvE.cat &lt;- nrAdvE.new
+head(CrohnD)</code></pre>
+<pre><code>##   nrAdvE   BMI height country sex age weight   treat nrAdvE.cat
+## 1      4 25.22    163      c1   F  47     67 placebo        low
+## 2      4 23.80    164      c1   F  53     64      d1        low
+## 3      1 23.05    164      c1   F  68     62 placebo        low
+## 4      1 25.71    165      c1   F  48     70      d2        low
+## 5      2 25.95    170      c1   F  67     75 placebo        low
+## 6      2 28.70    168      c1   F  54     81      d1        low</code></pre>
+<pre class="r"><code>CrohnD1&lt;-CrohnD%&gt;%mutate(nrAdvE.cat=ifelse(nrAdvE.cat==&quot;high&quot;,1,0))
+CrohnD1$BMI&lt;-CrohnD$BMI-mean(CrohnD$BMI)
+CrohnD1$weight&lt;-CrohnD$weight-mean(CrohnD$weight)
+head(CrohnD1)</code></pre>
+<pre><code>##   nrAdvE        BMI height country sex age    weight   treat nrAdvE.cat
+## 1      4 -0.8423932    163      c1   F  47 -2.025641 placebo          0
+## 2      4 -2.2623932    164      c1   F  53 -5.025641      d1          0
+## 3      1 -3.0123932    164      c1   F  68 -7.025641 placebo          0
+## 4      1 -0.3523932    165      c1   F  48  0.974359      d2          0
+## 5      2 -0.1123932    170      c1   F  67  5.974359 placebo          0
+## 6      2  2.6376068    168      c1   F  54 11.974359      d1          0</code></pre>
+<pre class="r"><code>fit&lt;-lm(nrAdvE.cat~BMI+weight,data=CrohnD1,family = &quot;binomial&quot;)</code></pre>
+<pre><code>## Warning: In lm.fit(x, y, offset = offset, singular.ok = singular.ok, ...) :
+##  extra argument &#39;family&#39; will be disregarded</code></pre>
+<pre class="r"><code>summary(fit)   </code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = nrAdvE.cat ~ BMI + weight, data = CrohnD1, family = &quot;binomial&quot;)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.34030 -0.10520 -0.07363 -0.01822  0.96734 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.094017   0.025814   3.642 0.000408 ***
+## BMI          0.033634   0.009130   3.684 0.000353 ***
+## weight      -0.008763   0.003198  -2.740 0.007124 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.2792 on 114 degrees of freedom
+## Multiple R-squared:  0.1082, Adjusted R-squared:  0.09254 
+## F-statistic: 6.915 on 2 and 114 DF,  p-value: 0.001464</code></pre>
+<pre class="r"><code>ggplot(CrohnD1, aes(x=BMI, y=weight))+geom_point()+
+  geom_smooth(method=&quot;lm&quot;,formula=y~1,se=F,fullrange=T,aes(color=weight))+
+theme(legend.position=&quot;none&quot;)+ggtitle(&quot;t-test&quot;)+xlab(&quot; &quot;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<pre class="r"><code>fit2&lt;-glm(nrAdvE.cat~BMI+weight,data=CrohnD1,family=binomial(link=&quot;logit&quot;))
+coeftest(fit) </code></pre>
+<pre><code>## 
+## t test of coefficients:
+## 
+##               Estimate Std. Error t value  Pr(&gt;|t|)    
+## (Intercept)  0.0940171  0.0258136  3.6422 0.0004082 ***
+## BMI          0.0336345  0.0091297  3.6841 0.0003527 ***
+## weight      -0.0087631  0.0031976 -2.7405 0.0071236 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>coeftest(fit, vcov=vcovHC(fit))[,1:2]</code></pre>
+<pre><code>##                 Estimate  Std. Error
+## (Intercept)  0.094017094 0.026283136
+## BMI          0.033634494 0.012334572
+## weight      -0.008763073 0.003811324</code></pre>
+<pre class="r"><code>new1&lt;-CrohnD
+new1$BMI&lt;-mean(CrohnD$BMI)
+new1$mean&lt;-predict(fit,new1)
+new1$weight&lt;-mean(CrohnD$BMI)+sd(CrohnD$BMI)
+new1$plus.sd&lt;-predict(fit,new1)
+new1$Age_c&lt;-mean(CrohnD$MBI)-sd(CrohnD$BMI)</code></pre>
+<pre><code>## Warning in mean.default(CrohnD$MBI): argument is not numeric or logical:
+## returning NA</code></pre>
+<pre class="r"><code>new1$minus.sd&lt;-predict(fit,new1)
+newint&lt;-new1%&gt;%select(nrAdvE.cat,weight,mean,plus.sd,minus.sd)%&gt;%gather(BMI,value,-nrAdvE.cat,-weight)
+mycols&lt;-c(&quot;#619CFF&quot;,&quot;#F8766D&quot;,&quot;#00BA38&quot;)
+
+names(mycols)&lt;-c(&quot;-1 sd&quot;,&quot;mean&quot;,&quot;+1 sd&quot;)
+mycols=as.factor(mycols)
+
+ggplot(CrohnD,aes(BMI,weight),group=mycols)+geom_point()+geom_line(data=new1,aes(y=mean,color=&quot;mean&quot;))+geom_line(data=new1,aes(y=plus.sd,color=&quot;+1 sd&quot;))+geom_line(data=new1,aes(y=minus.sd,color=&quot;-1 sd&quot;))+scale_color_manual(values=mycols)+labs(color=&quot;Age (cont)&quot;)+theme(legend.position=c(.9,.2))</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+<pre class="r"><code>resRM&lt;-lm(nrAdvE.cat~BMI,data = CrohnD)$residuals</code></pre>
+<pre><code>## Warning in model.response(mf, &quot;numeric&quot;): using type = &quot;numeric&quot; with a factor
+## response will be ignored</code></pre>
+<pre><code>## Warning in Ops.factor(y, z$residuals): &#39;-&#39; not meaningful for factors</code></pre>
+<pre class="r"><code>resUCL&lt;-lm(nrAdvE.cat~weight,data = CrohnD)$residuals</code></pre>
+<pre><code>## Warning in model.response(mf, &quot;numeric&quot;): using type = &quot;numeric&quot; with a factor
+## response will be ignored
+
+## Warning in model.response(mf, &quot;numeric&quot;): &#39;-&#39; not meaningful for factors</code></pre>
+<pre class="r"><code>#coef(lm(resRM~resUCL))
+coef(lm(BMI~weight+nrAdvE.cat,data = CrohnD))</code></pre>
+<pre><code>##    (Intercept)         weight nrAdvE.cathigh 
+##      6.0888764      0.2850554      3.1630997</code></pre>
+<pre class="r"><code>resids&lt;-fit$residuals
+fitvals&lt;-fit$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, col=&quot;red&quot;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-3-3.png" width="672" /></p>
+<pre class="r"><code>bptest(fit)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  fit
+## BP = 4.3325, df = 2, p-value = 0.1146</code></pre>
+<pre class="r"><code>ggplot()+geom_histogram(aes(resids),bins=20)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-3-4.png" width="672" /></p>
+<pre class="r"><code>ggplot()+geom_qq(aes(sample=resids))+geom_qq_line(aes(sample=resids), color=&#39;red&#39;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-3-5.png" width="672" /></p>
+<pre class="r"><code>ks.test(resids, &quot;pnorm&quot;, sd=sd(resids))</code></pre>
+<pre><code>## Warning in ks.test(resids, &quot;pnorm&quot;, sd = sd(resids)): ties should not be present
+## for the Kolmogorov-Smirnov test</code></pre>
+<pre><code>## 
+##  One-sample Kolmogorov-Smirnov test
+## 
+## data:  resids
+## D = 0.31117, p-value = 2.891e-10
+## alternative hypothesis: two-sided</code></pre>
+<pre class="r"><code>coeftest(fit)[,1:2]</code></pre>
+<pre><code>##                 Estimate  Std. Error
+## (Intercept)  0.094017094 0.025813569
+## BMI          0.033634494 0.009129727
+## weight      -0.008763073 0.003197641</code></pre>
+<pre class="r"><code>coeftest(fit, vcov=vcovHC(fit))[,1:2]</code></pre>
+<pre><code>##                 Estimate  Std. Error
+## (Intercept)  0.094017094 0.026283136
+## BMI          0.033634494 0.012334572
+## weight      -0.008763073 0.003811324</code></pre>
+<pre class="r"><code>summary(fit)$r.sq</code></pre>
+<pre><code>## [1] 0.1081863</code></pre>
+<p>I first categorized the numeric variable for number of adverse events into either low or high. A linear regression model was ran to predict the outcome of adverse events (with low or high) from BMI and weight.These two predictor variables were numeric and also mean-centered. It is important to note that BMI:weight was also a coefficient as it reflected the interaction between the two predictor variables.The y-intercept represents the value of y when BMI and weight are zero. The coefficient for BMI suggests that when weight is controlled for, BMI slightly increases the number of adverse events. On the other hand, when BMI is controlled for, weight has a slightly negative effect on the number of adverse events. Regression was recomputed using a more robust standard error via coeftest. There was no change in the values of the coefficients as well as the p-values after recomputing the regression. The p-values were once again less then 0.05 and thus signficant. This model explains 0.10818 of the proportion of the variation in the outcome. In regard to homoskedasticity and linearity, the graphs produced suggest that this assumption for the most part was not violated. We can see that there is evidence of fanning out. The Breusch-pagan test produced a p-value of 0.1146 and thus suggesting that this assumption for normal distrubtion was not violated since H0=homoskedastic. On the other hand,the Kolmogorov-Smirnov test produced a p-value of 2.891e-10 thus suggesting that we reject the null that the data has a normal distribution.</p>
+<pre class="r"><code>4.#Reran regression model</code></pre>
+<pre><code>## [1] 4</code></pre>
+<pre class="r"><code>fit&lt;-lm(nrAdvE.cat~BMI*weight,data=CrohnD1)
+summary(fit)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = nrAdvE.cat ~ BMI * weight, data = CrohnD1)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.28886 -0.11716 -0.06814 -0.01933  0.95007 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.1135857  0.0290633   3.908 0.000159 ***
+## BMI          0.0361228  0.0092497   3.905 0.000161 ***
+## weight      -0.0084813  0.0031887  -2.660 0.008954 ** 
+## BMI:weight  -0.0003378  0.0002345  -1.440 0.152513    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.2779 on 113 degrees of freedom
+## Multiple R-squared:  0.1243, Adjusted R-squared:  0.101 
+## F-statistic: 5.345 on 3 and 113 DF,  p-value: 0.001766</code></pre>
+<pre class="r"><code>coeftest(fit)</code></pre>
+<pre><code>## 
+## t test of coefficients:
+## 
+##                Estimate  Std. Error t value  Pr(&gt;|t|)    
+## (Intercept)  0.11358568  0.02906334  3.9082 0.0001589 ***
+## BMI          0.03612276  0.00924973  3.9053 0.0001606 ***
+## weight      -0.00848134  0.00318868 -2.6598 0.0089543 ** 
+## BMI:weight  -0.00033781  0.00023453 -1.4404 0.1525134    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>coeftest(fit)[,1:2]</code></pre>
+<pre><code>##                  Estimate   Std. Error
+## (Intercept)  0.1135856789 0.0290633392
+## BMI          0.0361227590 0.0092497297
+## weight      -0.0084813430 0.0031886770
+## BMI:weight  -0.0003378149 0.0002345251</code></pre>
+<pre class="r"><code>coeftest(fit, vcov=vcovHC(fit))[,1:2]</code></pre>
+<pre><code>##                  Estimate   Std. Error
+## (Intercept)  0.1135856789 0.0305852111
+## BMI          0.0361227590 0.0113249039
+## weight      -0.0084813430 0.0034413397
+## BMI:weight  -0.0003378149 0.0001728742</code></pre>
+<pre class="r"><code>samp_distn&lt;-replicate(5000,{
+boot_dat&lt;-boot_dat&lt;-CrohnD1[sample(nrow(CrohnD1),replace = TRUE),]
+fit&lt;-glm(nrAdvE.cat~BMI*weight,data=boot_dat)
+coef(fit)
+})
+samp_distn%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept)        BMI      weight   BMI:weight
+## 1  0.02988295 0.01076596 0.003337542 0.0002082247</code></pre>
+<pre class="r"><code>fit2&lt;-lm(nrAdvE.cat~BMI*weight,data=CrohnD1)
+summary(fit2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = nrAdvE.cat ~ BMI * weight, data = CrohnD1)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.28886 -0.11716 -0.06814 -0.01933  0.95007 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.1135857  0.0290633   3.908 0.000159 ***
+## BMI          0.0361228  0.0092497   3.905 0.000161 ***
+## weight      -0.0084813  0.0031887  -2.660 0.008954 ** 
+## BMI:weight  -0.0003378  0.0002345  -1.440 0.152513    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.2779 on 113 degrees of freedom
+## Multiple R-squared:  0.1243, Adjusted R-squared:  0.101 
+## F-statistic: 5.345 on 3 and 113 DF,  p-value: 0.001766</code></pre>
+<pre class="r"><code>resids&lt;-fit2$residuals
+fitted&lt;-fit2$fitted.values
+resid_resamp&lt;-replicate(5000,{
+new_resids&lt;-sample(resids,replace=TRUE)
+newdat&lt;-CrohnD1
+newdat$new_y&lt;-fitted+new_resids
+fit2&lt;-lm(new_y ~ BMI*weight, data = newdat)
+coef(fit2)
+})
+resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept)         BMI      weight   BMI:weight
+## 1  0.02876237 0.009073605 0.003164596 0.0002299999</code></pre>
+<pre class="r"><code>resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%gather%&gt;%group_by(key)%&gt;% summarize(lower=quantile(value,.025), upper=quantile(value,0.975))</code></pre>
+<pre><code>## # A tibble: 4 x 3
+##   key             lower     upper
+##   &lt;chr&gt;           &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)  0.0617    0.173   
+## 2 BMI          0.0204    0.0572  
+## 3 BMI:weight  -0.000717  0.000163
+## 4 weight      -0.0150   -0.00235</code></pre>
+<pre class="r"><code>coeftest(fit2)[,1:2]</code></pre>
+<pre><code>##                  Estimate   Std. Error
+## (Intercept)  0.1135856789 0.0290633392
+## BMI          0.0361227590 0.0092497297
+## weight      -0.0084813430 0.0031886770
+## BMI:weight  -0.0003378149 0.0002345251</code></pre>
+<pre class="r"><code>coeftest(fit2, vcov=vcovHC(fit2))[,1:2]</code></pre>
+<pre><code>##                  Estimate   Std. Error
+## (Intercept)  0.1135856789 0.0305852111
+## BMI          0.0361227590 0.0113249039
+## weight      -0.0084813430 0.0034413397
+## BMI:weight  -0.0003378149 0.0001728742</code></pre>
+<pre class="r"><code>samp_distn%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept)        BMI      weight   BMI:weight
+## 1  0.02988295 0.01076596 0.003337542 0.0002082247</code></pre>
+<pre class="r"><code>resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept)         BMI      weight   BMI:weight
+## 1  0.02876237 0.009073605 0.003164596 0.0002299999</code></pre>
+<p>I did not observe any changes in SEs when this regression model was reran to compute bootstrapped standard error. Furthermore, there were no changes in the p-value since both regression models produced very similar outputs.</p>
+<pre class="r"><code>#5.Logistic Regression Model
+
+CrohnD1$outcome&lt;-factor(CrohnD1$nrAdvE.cat,levels=c(&quot;0&quot;,&quot;1&quot;))
+fit4&lt;-glm(nrAdvE.cat~BMI+weight,data = CrohnD1,family = binomial(link = &quot;logit&quot;))
+summary(fit4)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = nrAdvE.cat ~ BMI + weight, family = binomial(link = &quot;logit&quot;), 
+##     data = CrohnD1)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.9644  -0.4268  -0.3592  -0.2832   2.5420  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -2.52462    0.37446  -6.742 1.56e-11 ***
+## BMI          0.30900    0.12923   2.391   0.0168 *  
+## weight      -0.08690    0.04956  -1.753   0.0795 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 72.946  on 116  degrees of freedom
+## Residual deviance: 63.579  on 114  degrees of freedom
+## AIC: 69.579
+## 
+## Number of Fisher Scoring iterations: 6</code></pre>
+<pre class="r"><code>coeftest(fit4)</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##              Estimate Std. Error z value  Pr(&gt;|z|)    
+## (Intercept) -2.524621   0.374457 -6.7421 1.561e-11 ***
+## BMI          0.309000   0.129231  2.3911   0.01680 *  
+## weight      -0.086901   0.049563 -1.7533   0.07954 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>coef(fit4)%&gt;%round(5)%&gt;%data.frame</code></pre>
+<pre><code>##                    .
+## (Intercept) -2.52462
+## BMI          0.30900
+## weight      -0.08690</code></pre>
+<pre class="r"><code>coef(fit4)%&gt;%exp%&gt;%round(5)%&gt;%data.frame</code></pre>
+<pre><code>##                   .
+## (Intercept) 0.08009
+## BMI         1.36206
+## weight      0.91677</code></pre>
+<pre class="r"><code>exp(coef(fit4))</code></pre>
+<pre><code>## (Intercept)         BMI      weight 
+##  0.08008868  1.36206243  0.91676749</code></pre>
+<pre class="r"><code>odds2prob&lt;-function(odds){odds/(1+odds)}
+odds2prob(0.08009)</code></pre>
+<pre><code>## [1] 0.07415123</code></pre>
+<pre class="r"><code>#Confusion Matrix
+tdat&lt;-CrohnD1%&gt;%mutate(prob=predict(fit4,type = &quot;response&quot;),prediction=ifelse(prob&gt;.5,1,0))
+classify&lt;-tdat%&gt;%transmute(prob,prediction,truth=nrAdvE.cat)
+table(prediction=classify$prediction,truth=classify$truth)%&gt;%addmargins</code></pre>
+<pre><code>##           truth
+## prediction   0   1 Sum
+##        0   106  10 116
+##        1     0   1   1
+##        Sum 106  11 117</code></pre>
+<pre class="r"><code>#Accuracy (correctly classified cases)
+((106+1)/117)</code></pre>
+<pre><code>## [1] 0.9145299</code></pre>
+<pre class="r"><code>#Sensitivity (TPR)
+(106/106)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>#Specificity(TNR)
+(1/11)</code></pre>
+<pre><code>## [1] 0.09090909</code></pre>
+<pre class="r"><code>#Precision (PPV)
+(106/116)</code></pre>
+<pre><code>## [1] 0.9137931</code></pre>
+<pre class="r"><code>pca1&lt;-princomp(CrohnD1[c(&#39;BMI&#39;,&#39;weight&#39;)])
+CrohnD1$predictor&lt;-pca1$scores[,1]
+CrohnD1$prob&lt;-predict(fit4,type=&quot;response&quot;)
+#note 0=low and 1=high
+ggplot(CrohnD1, aes(predictor,prob))+geom_point(aes(color=outcome),alpha=.5,size=3)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code>#Density plot of log-odds (logit)
+
+logit&lt;-function(p)log(odds(p))
+tdat$logit&lt;-predict(fit4)
+tdat$outcome&lt;-factor(tdat$outcome,levels=c(&quot;0&quot;,&quot;1&quot;)) 
+ggplot(tdat,aes(logit, fill=outcome))+geom_density(alpha=.3)+geom_vline(xintercept=0,lty=2)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
+<pre class="r"><code>#ROC curve
+library(plotROC)
+sens&lt;-function(p,data=tdat, y=outcome) mean(tdat[tdat$outcome==1,]$prob&gt;p)
+spec&lt;-function(p,data=tdat, y=outcome) mean(tdat[tdat$outcome==0,]$prob&lt;p)
+
+sensitivity&lt;-sapply(seq(0,1,.01),sens,tdat)
+specificity&lt;-sapply(seq(0,1,.01),spec,tdat)
+
+ROC1&lt;-data.frame(sensitivity,specificity,cutoff=seq(0,1,.01))
+ROC1%&gt;%gather(key,rate,-cutoff)%&gt;%ggplot(aes(cutoff,rate,color=key))+geom_path()+geom_vline(xintercept=c(.1,.5,.9),lty=2,color=&quot;gray50&quot;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-5-3.png" width="672" /></p>
+<pre class="r"><code>ROC1$TPR&lt;-sensitivity
+ROC1$FPR&lt;-1-specificity
+#ROC1%&gt;%ggplot(aes(FPR,TPR))+geom_path(size=1.5)+geom_segment(aes(x=0,y=0,xend=1,yend=1),scale_x_continuous(limits = c(0,1)) 
+#(this code refuses to run for me)
+ROCplot&lt;-ggplot(CrohnD1)+geom_roc(aes(d=nrAdvE.cat,m=prob), n.cuts=0)
+ROCplot</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-5-4.png" width="672" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.7431389</code></pre>
+<pre class="r"><code>class_diag&lt;-function(probs,truth){
+if(is.numeric(truth)==FALSE &amp; is.logical(truth)==FALSE) truth&lt;-as.numeric(truth)-1
+tab&lt;-table(factor(probs&gt;.5,levels=c(&quot;FALSE&quot;,&quot;TRUE&quot;)),truth)
+prediction&lt;-ifelse(probs&gt;.5,1,0)
+acc=mean(truth==prediction)
+sens=mean(prediction[truth==1]==1)
+spec=mean(prediction[truth==0]==0)
+ppv=mean(truth[prediction==1]==1)
+#CALCULATE EXACT AUC
+ord&lt;-order(probs, decreasing=TRUE)
+probs &lt;- probs[ord]; truth &lt;- truth[ord]
+TPR=cumsum(truth)/max(1,sum(truth))
+FPR=cumsum(!truth)/max(1,sum(!truth))
+dup&lt;-c(probs[-1]&gt;=probs[-length(probs)], FALSE)
+TPR&lt;-c(0,TPR[!dup],1); FPR&lt;-c(0,FPR[!dup],1)
+n &lt;- length(TPR)
+auc&lt;- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+data.frame(acc,sens,spec,ppv,auc)
+}
+
+# 10 Fold CV test 
+set.seed(1234)
+k=10 
+data&lt;-tdat[sample(nrow(tdat)),] 
+folds&lt;-cut(seq(1:nrow(tdat)),breaks=k,labels=F) 
+diags&lt;-NULL
+for(i in 1:k){
+train&lt;-data[folds!=i,]
+test&lt;-data[folds==i,]
+truth&lt;-test$outcome
+fit4&lt;-glm(nrAdvE.cat~BMI+weight,data = CrohnD1,family = binomial)
+probs&lt;-predict(fit4,newdata = test,type=&quot;response&quot;)
+diags&lt;-rbind(diags,class_diag(probs,truth))
+}
+summarize_all(diags,mean)</code></pre>
+<pre><code>##         acc sens spec ppv      auc
+## 1 0.9159091  NaN    1 NaN 0.455101</code></pre>
+<p>A logistic regression was run in order to predict the binary categorial variable which in this cases is # of adverse event which is either low or high. The coefficient for BMI suggests that going up 1 BMI unit increases the log-odds by 0.309 while on the other hand the coefficient for weight suggests that, going up 1lb in weight decreases the log-odd by 0.0869. 0.07415123 represents the probability of a high # of adverse events if BMI and weight are zero. Next, a confusion matrix was produced for this logistic regression. The proportion of correctly classified cases (low or high ) (Accuracy) was 0.914. The proportion of correctly classified low cases (Sensitivity) was 1. The proportion of correctly classified high cases (Specificity) was 0.0909. The precision (positive predictive value) was 0.9137. Next, A ROC curve was generated to calculate AUC. The AUC was 0.7431389. Since the AUC is used to quantify how well we are predicting overall, 0.7431389 is a fair value and suggests that our predictions are for the most part good. A 10-fold CV test produced the following values: Acc=0.9159, Sens=NaN,Spec=1,Ppv=NaN and Auc=0.544. The values for acc, was very similar to that calculated from the confusion matrix. Furthermore, the auc value produced from the ROC curve was very similar to that produced from the 10-fold CV test.</p>
+<pre class="r"><code>#6. Lasso reggression
+
+cat &lt;- CrohnD[order(CrohnD$nrAdvE),]
+nrAdvE.new &lt;- cut(CrohnD$nrAdvE, breaks=2, labels=c(&quot;low&quot;,&quot;high&quot;))
+head(nrAdvE.new)</code></pre>
+<pre><code>## [1] low low low low low low
+## Levels: low high</code></pre>
+<pre class="r"><code>CrohnD$nrAdvE.cat &lt;- nrAdvE.new
+head(CrohnD)</code></pre>
+<pre><code>##   nrAdvE   BMI height country sex age weight   treat nrAdvE.cat
+## 1      4 25.22    163      c1   F  47     67 placebo        low
+## 2      4 23.80    164      c1   F  53     64      d1        low
+## 3      1 23.05    164      c1   F  68     62 placebo        low
+## 4      1 25.71    165      c1   F  48     70      d2        low
+## 5      2 25.95    170      c1   F  67     75 placebo        low
+## 6      2 28.70    168      c1   F  54     81      d1        low</code></pre>
+<pre class="r"><code>CrohnD1&lt;-CrohnD%&gt;%mutate(nrAdvE.cat=ifelse(nrAdvE.cat==&quot;high&quot;,1,0))
+
+y&lt;-as.matrix(CrohnD1$nrAdvE.cat) 
+x&lt;-model.matrix(nrAdvE.cat~.,data=CrohnD1)[,-1]
+head(x)</code></pre>
+<pre><code>##   nrAdvE   BMI height countryc2 sexF age weight treatd1 treatd2
+## 1      4 25.22    163         0    1  47     67       0       0
+## 2      4 23.80    164         0    1  53     64       1       0
+## 3      1 23.05    164         0    1  68     62       0       0
+## 4      1 25.71    165         0    1  48     70       0       1
+## 5      2 25.95    170         0    1  67     75       0       0
+## 6      2 28.70    168         0    1  54     81       1       0</code></pre>
+<pre class="r"><code>head(y)</code></pre>
+<pre><code>##      [,1]
+## [1,]    0
+## [2,]    0
+## [3,]    0
+## [4,]    0
+## [5,]    0
+## [6,]    0</code></pre>
+<pre class="r"><code>cv &lt;- cv.glmnet(x,y)
+cv&lt;-cv.glmnet(x,y,family=&quot;binomial&quot;)
+lasso&lt;-glmnet(x,y,family=&quot;binomial&quot;,lambda=cv$lambda.1se)
+coef(lasso)</code></pre>
+<pre><code>## 10 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                       s0
+## (Intercept) -12.84364842
+## nrAdvE        2.11239644
+## BMI           0.04820935
+## height        .         
+## countryc2     .         
+## sexF          .         
+## age          -0.03993804
+## weight        .         
+## treatd1      -0.03487792
+## treatd2       .</code></pre>
+<pre class="r"><code>glimpse(lasso)</code></pre>
+<pre><code>## List of 13
+##  $ a0        : Named num -12.8
+##   ..- attr(*, &quot;names&quot;)= chr &quot;s0&quot;
+##  $ beta      :Formal class &#39;dgCMatrix&#39; [package &quot;Matrix&quot;] with 6 slots
+##   .. ..@ i       : int [1:4] 0 1 5 7
+##   .. ..@ p       : int [1:2] 0 4
+##   .. ..@ Dim     : int [1:2] 9 1
+##   .. ..@ Dimnames:List of 2
+##   .. ..@ x       : num [1:4] 2.1124 0.0482 -0.0399 -0.0349
+##   .. ..@ factors : list()
+##  $ df        : int 4
+##  $ dim       : int [1:2] 9 1
+##  $ lambda    : num 0.00453
+##  $ dev.ratio : num 0.939
+##  $ nulldev   : num 72.9
+##  $ npasses   : int 416
+##  $ jerr      : int 0
+##  $ offset    : logi FALSE
+##  $ classnames: chr [1:2] &quot;0&quot; &quot;1&quot;
+##  $ call      : language glmnet(x = x, y = y, family = &quot;binomial&quot;, lambda = cv$lambda.1se)
+##  $ nobs      : int 117
+##  - attr(*, &quot;class&quot;)= chr [1:2] &quot;lognet&quot; &quot;glmnet&quot;</code></pre>
+<pre class="r"><code>set.seed(1234)
+k=10
+data1&lt;-CrohnD1[sample(nrow(CrohnD1)),]
+folds&lt;-cut(seq(1:nrow(CrohnD1)),breaks=k,labels=F)
+diags2&lt;-NULL
+for(i in 1:k){
+train2&lt;-data1[folds!=i,]
+test2&lt;-data1[folds==i,]
+truth2&lt;-test$nrAdvE.cat
+fit6&lt;- glm(nrAdvE.cat~BMI+age,data=train, family=&quot;binomial&quot;(link=&quot;logit&quot;))
+probs2&lt;- predict(fit6, newdata=test, type=&quot;response&quot;)
+diags2&lt;-rbind(diags2,class_diag(probs2,truth2))}
+
+apply(diags2,2,mean)</code></pre>
+<pre><code>##  acc sens spec  ppv  auc 
+##    1  NaN    1  NaN    0</code></pre>
+<p>The results from the lasso regression suggest that BMI, and age are the most predictive variable for number of the high/low adverse events (I am ignoring nrAdve as that is the acutal # of adverse events). The results of the 10-fold CV test using this model(using only BMI and age) was the following: acc= 0.9166667, sens:0.00, spec=1.00, ppv=NaN, and auc=0.8181818. This model’s out-of-sample accuracy was kind of similar to that produced for the logisitc regression in question 5.</p>

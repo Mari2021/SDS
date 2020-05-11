@@ -1,0 +1,328 @@
+---
+title: "Project 2:Modeling,Testing,and Predicting"
+author: "Yemariamwork Engidaw"
+date: "05/03/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+```{r global_options, include=FALSE}
+library(knitr)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(beginr)
+library(sandwich)
+library(glmnet)
+library(plotROC)
+library(tidyr)
+library(devtools)
+library(readxl)
+library(lmtest)
+library(robustbase)
+data(CrohnD)
+CrohnD$ID<- NULL
+```
+
+
+I have decided to use the CrohnD dataset from the package robustbase. This dataset provides information regarding the number of adverse events caused by a drug used to treat patients sufferring from Crohns disease.This is dataset is composed of 117 observations on 9 variables: ID (patient identifcation number),nrAdvE (number of adverse events), BMI (Body MASS Index), height (in cm), country (a factor with levels 0 and 1),sex, age, weight (in kilograms) and finally treat (how CD was treated: a factor with levels 0, 1 and 2, meaning placebo, drug 1 and drug 2.)I have gone ahead and removed the variable ID from the dataset as it is not significant. 
+
+
+```{R}
+#1. MANOVA/ANOVA Test
+ggplot(CrohnD, aes(x = weight, y = BMI)) +
+  geom_point(alpha = .5) + geom_density_2d(h=2) + coord_fixed() + facet_wrap(~sex)
+
+covmats<-CrohnD%>%group_by(sex)%>%do(covs=cov(.[2:3]))
+for(i in 1:3){print(as.character(covmats$sex[i])); print(covmats$covs[i])}
+
+man1<-manova(cbind(weight,BMI)~sex, data=CrohnD)
+summary(man1)
+summary.aov(man1)
+CrohnD%>%group_by(sex)%>%summarize(mean(weight),mean(BMI))
+pairwise.t.test(CrohnD$weight, CrohnD$sex, p.adj = "none")
+pairwise.t.test(CrohnD$BMI, CrohnD$sex, p.adj = "none")
+CrohnD%>%select(sex,weight,BMI)%>%pivot_longer(-1,names_to='DV', values_to='measure')%>%
+  ggplot(aes(sex,measure,fill=sex))+geom_bar(stat="summary")+geom_errorbar(stat="summary", width=.5)+
+  facet_wrap(~DV, nrow=2)+coord_flip()+ylab("")+theme(legend.position = "none")
+```
+
+
+The results of the MANOVA test produced a significant p-value as it was less that 0.05. This suggest that females and males in this study possess very a significantly different mean for weight and BMI.Since the result from the MANOVA test was significant, an ANOVA test was then ran. The mean weight and BMI values was also determined.There was a significant difference in mean weight between females and males, and this was determined by the ANOVA test which produced a p-value of 0.001006. On the other hand, the mean difference between male and female BMI was not very significant (p-value was 0.4259). Next, a post-hoc test was performed to find which groups differ however, since there are only two options for sex, we already know that each sex differs from one another.In regard to the ANOVA assumptions,the multivariate normality was violated for the female group. The ggplot produced shows that the DV for the female sex was not normally distributed. Since we have two numeric response variables and one categorical predictor variable (which also possess two levels), we would run one MANOVA and two ANOVA. As a result of the variables used, the type one error probability would be equal to alpha (0.05). 
+
+
+```{R}
+ #2. Randomization Test
+placebo<-c(4,1,2,0,6,8,0,2,2,0,0,1,1,0,0,12,0,2,5,1)
+d1<-c(4,2,3,0,2,0,0,0,0,0,0,0,0,1,2,1,2,2,0,2)
+cron<-data.frame(condition=c(rep("placebo",20),rep("d1",20)),adevent=c(placebo,d1))
+head(cron)
+cron%>%group_by(condition)%>%summarize(s=sd(adevent))%>%summarize(diff(s))
+ggplot(cron,aes(adevent,fill=condition))+geom_histogram(bins=6.5)+facet_wrap(~condition,ncol=2)+theme(legend.position="none")
+head(perm1<-data.frame(condition=cron$condition,adevent=sample(cron$adevent)))
+perm1%>%group_by(condition)%>%summarize(means=mean(adevent))%>%summarize(`mean_diff:`=diff(means))
+rand_dist<-vector()
+for(i in 1:5000){
+new<-data.frame(adevent=sample(cron$adevent),condition=cron$condition)
+rand_dist[i]<-mean(new[new$condition=="d1",]$adevent)-
+mean(new[new$condition=="placebo",]$adevent)}
+mean(rand_dist>1.965542 | rand_dist< -1.965542)
+
+{hist(rand_dist,main="",ylab=""); abline(v = 1.965542,col="red")}
+
+t.test(data=cron,adevent~condition)
+```
+
+
+
+H0: Patients given the treatment d1 had no significantly different amount of adverse reactions than those given a placebo. 
+Ha: Patients given the treatment d1 had a significnatly different mean number of adverse reactions than those given a placebo.
+In order to conduct this randomization test, I first created two new vectors. The first vector contained 20 observations of adverse events in patients that recieved the placebo while the second vector contained 20 obsevations of adverse events in patient that recieved the d1 treatment. The actual mean difference between the two group was determind to be 1.965. When the observations were split into a random group (permutation #1), the mean difference between the two groups was 0.6 (very small). The two-tailed p-value was computed to be around 0.0044 (significant). When I computed the Welch t-test, the p-value produced was 0.1027 which is insignificant as it is greater then 0.05 (this would suggest that we accept the null). 
+
+
+```{R}
+3. #Linear Regression model
+library(lmtest)
+
+cat <- CrohnD[order(CrohnD$nrAdvE),]
+nrAdvE.new <- cut(CrohnD$nrAdvE, breaks=2, labels=c("low","high"))
+head(nrAdvE.new)
+CrohnD$nrAdvE.cat <- nrAdvE.new
+head(CrohnD)
+CrohnD1<-CrohnD%>%mutate(nrAdvE.cat=ifelse(nrAdvE.cat=="high",1,0))
+CrohnD1$BMI<-CrohnD$BMI-mean(CrohnD$BMI)
+CrohnD1$weight<-CrohnD$weight-mean(CrohnD$weight)
+head(CrohnD1)
+fit<-lm(nrAdvE.cat~BMI+weight,data=CrohnD1,family = "binomial")
+summary(fit)   
+ggplot(CrohnD1, aes(x=BMI, y=weight))+geom_point()+
+  geom_smooth(method="lm",formula=y~1,se=F,fullrange=T,aes(color=weight))+
+theme(legend.position="none")+ggtitle("t-test")+xlab(" ")
+
+fit2<-glm(nrAdvE.cat~BMI+weight,data=CrohnD1,family=binomial(link="logit"))
+coeftest(fit) 
+coeftest(fit, vcov=vcovHC(fit))[,1:2]
+
+
+new1<-CrohnD
+new1$BMI<-mean(CrohnD$BMI)
+new1$mean<-predict(fit,new1)
+new1$weight<-mean(CrohnD$BMI)+sd(CrohnD$BMI)
+new1$plus.sd<-predict(fit,new1)
+new1$Age_c<-mean(CrohnD$MBI)-sd(CrohnD$BMI)
+new1$minus.sd<-predict(fit,new1)
+newint<-new1%>%select(nrAdvE.cat,weight,mean,plus.sd,minus.sd)%>%gather(BMI,value,-nrAdvE.cat,-weight)
+mycols<-c("#619CFF","#F8766D","#00BA38")
+
+names(mycols)<-c("-1 sd","mean","+1 sd")
+mycols=as.factor(mycols)
+
+ggplot(CrohnD,aes(BMI,weight),group=mycols)+geom_point()+geom_line(data=new1,aes(y=mean,color="mean"))+geom_line(data=new1,aes(y=plus.sd,color="+1 sd"))+geom_line(data=new1,aes(y=minus.sd,color="-1 sd"))+scale_color_manual(values=mycols)+labs(color="Age (cont)")+theme(legend.position=c(.9,.2))
+
+resRM<-lm(nrAdvE.cat~BMI,data = CrohnD)$residuals
+resUCL<-lm(nrAdvE.cat~weight,data = CrohnD)$residuals
+#coef(lm(resRM~resUCL))
+coef(lm(BMI~weight+nrAdvE.cat,data = CrohnD))
+
+resids<-fit$residuals
+fitvals<-fit$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, col="red")
+
+bptest(fit)
+ggplot()+geom_histogram(aes(resids),bins=20)
+ggplot()+geom_qq(aes(sample=resids))+geom_qq_line(aes(sample=resids), color='red')
+
+ks.test(resids, "pnorm", sd=sd(resids))
+coeftest(fit)[,1:2]
+coeftest(fit, vcov=vcovHC(fit))[,1:2]
+summary(fit)$r.sq
+```
+
+
+
+
+I first categorized the numeric variable for number of adverse events into either low or high. A linear regression model was ran to predict the outcome of adverse events (with low or high) from BMI and weight.These two predictor variables were numeric and also mean-centered. It is important to note that BMI:weight was also a coefficient as it reflected the interaction between the two predictor variables.The y-intercept represents the value of y when BMI and weight are zero. The coefficient for BMI suggests that when weight is controlled for, BMI slightly increases the number of adverse events. On the other hand, when BMI is controlled for, weight has a slightly negative effect on the number of adverse events. Regression was recomputed using a more robust standard error via coeftest. There was no change in the values of the coefficients as well as the p-values after recomputing the regression. The p-values were once again less then 0.05 and thus signficant. This model explains 0.10818 of the proportion of the variation in the outcome. In regard to homoskedasticity and linearity, the graphs produced suggest that this assumption for the most part was not violated. We can see that there is evidence of fanning out. The Breusch-pagan test produced a p-value of 0.1146 and thus suggesting that this assumption for normal distrubtion was not violated since H0=homoskedastic. On the other hand,the Kolmogorov-Smirnov test produced a p-value of 2.891e-10 thus suggesting that we reject the null that the data has a normal distribution. 
+
+
+```{R}
+4.#Reran regression model
+
+fit<-lm(nrAdvE.cat~BMI*weight,data=CrohnD1)
+summary(fit)
+coeftest(fit)
+
+coeftest(fit)[,1:2]
+coeftest(fit, vcov=vcovHC(fit))[,1:2]
+
+
+samp_distn<-replicate(5000,{
+boot_dat<-boot_dat<-CrohnD1[sample(nrow(CrohnD1),replace = TRUE),]
+fit<-glm(nrAdvE.cat~BMI*weight,data=boot_dat)
+coef(fit)
+})
+samp_distn%>%t%>%as.data.frame%>%summarize_all(sd)
+
+fit2<-lm(nrAdvE.cat~BMI*weight,data=CrohnD1)
+summary(fit2)
+resids<-fit2$residuals
+fitted<-fit2$fitted.values
+resid_resamp<-replicate(5000,{
+new_resids<-sample(resids,replace=TRUE)
+newdat<-CrohnD1
+newdat$new_y<-fitted+new_resids
+fit2<-lm(new_y ~ BMI*weight, data = newdat)
+coef(fit2)
+})
+resid_resamp%>%t%>%as.data.frame%>%summarize_all(sd)
+
+resid_resamp%>%t%>%as.data.frame%>%gather%>%group_by(key)%>% summarize(lower=quantile(value,.025), upper=quantile(value,0.975))
+coeftest(fit2)[,1:2]
+coeftest(fit2, vcov=vcovHC(fit2))[,1:2]
+samp_distn%>%t%>%as.data.frame%>%summarize_all(sd)
+resid_resamp%>%t%>%as.data.frame%>%summarize_all(sd)
+```
+
+
+I did not observe any changes in SEs when this regression model was reran to compute bootstrapped standard error. Furthermore, there were no changes in the p-value since both regression models produced very similar outputs. 
+
+```{R}
+
+#5.Logistic Regression Model
+
+CrohnD1$outcome<-factor(CrohnD1$nrAdvE.cat,levels=c("0","1"))
+fit4<-glm(nrAdvE.cat~BMI+weight,data = CrohnD1,family = binomial(link = "logit"))
+summary(fit4)
+coeftest(fit4)
+coef(fit4)%>%round(5)%>%data.frame
+coef(fit4)%>%exp%>%round(5)%>%data.frame
+exp(coef(fit4))
+
+odds2prob<-function(odds){odds/(1+odds)}
+odds2prob(0.08009)
+
+#Confusion Matrix
+tdat<-CrohnD1%>%mutate(prob=predict(fit4,type = "response"),prediction=ifelse(prob>.5,1,0))
+classify<-tdat%>%transmute(prob,prediction,truth=nrAdvE.cat)
+table(prediction=classify$prediction,truth=classify$truth)%>%addmargins
+
+#Accuracy (correctly classified cases)
+((106+1)/117)
+#Sensitivity (TPR)
+(106/106)
+#Specificity(TNR)
+(1/11)
+#Precision (PPV)
+(106/116)
+
+pca1<-princomp(CrohnD1[c('BMI','weight')])
+CrohnD1$predictor<-pca1$scores[,1]
+CrohnD1$prob<-predict(fit4,type="response")
+#note 0=low and 1=high
+ggplot(CrohnD1, aes(predictor,prob))+geom_point(aes(color=outcome),alpha=.5,size=3)
+
+
+#Density plot of log-odds (logit)
+
+logit<-function(p)log(odds(p))
+tdat$logit<-predict(fit4)
+tdat$outcome<-factor(tdat$outcome,levels=c("0","1")) 
+ggplot(tdat,aes(logit, fill=outcome))+geom_density(alpha=.3)+geom_vline(xintercept=0,lty=2)
+
+#ROC curve
+library(plotROC)
+sens<-function(p,data=tdat, y=outcome) mean(tdat[tdat$outcome==1,]$prob>p)
+spec<-function(p,data=tdat, y=outcome) mean(tdat[tdat$outcome==0,]$prob<p)
+
+sensitivity<-sapply(seq(0,1,.01),sens,tdat)
+specificity<-sapply(seq(0,1,.01),spec,tdat)
+
+ROC1<-data.frame(sensitivity,specificity,cutoff=seq(0,1,.01))
+ROC1%>%gather(key,rate,-cutoff)%>%ggplot(aes(cutoff,rate,color=key))+geom_path()+geom_vline(xintercept=c(.1,.5,.9),lty=2,color="gray50")
+ROC1$TPR<-sensitivity
+ROC1$FPR<-1-specificity
+#ROC1%>%ggplot(aes(FPR,TPR))+geom_path(size=1.5)+geom_segment(aes(x=0,y=0,xend=1,yend=1),scale_x_continuous(limits = c(0,1)) 
+#(this code refuses to run for me)
+ROCplot<-ggplot(CrohnD1)+geom_roc(aes(d=nrAdvE.cat,m=prob), n.cuts=0)
+ROCplot
+calc_auc(ROCplot)
+
+
+class_diag<-function(probs,truth){
+if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+prediction<-ifelse(probs>.5,1,0)
+acc=mean(truth==prediction)
+sens=mean(prediction[truth==1]==1)
+spec=mean(prediction[truth==0]==0)
+ppv=mean(truth[prediction==1]==1)
+#CALCULATE EXACT AUC
+ord<-order(probs, decreasing=TRUE)
+probs <- probs[ord]; truth <- truth[ord]
+TPR=cumsum(truth)/max(1,sum(truth))
+FPR=cumsum(!truth)/max(1,sum(!truth))
+dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+n <- length(TPR)
+auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+data.frame(acc,sens,spec,ppv,auc)
+}
+
+# 10 Fold CV test 
+set.seed(1234)
+k=10 
+data<-tdat[sample(nrow(tdat)),] 
+folds<-cut(seq(1:nrow(tdat)),breaks=k,labels=F) 
+diags<-NULL
+for(i in 1:k){
+train<-data[folds!=i,]
+test<-data[folds==i,]
+truth<-test$outcome
+fit4<-glm(nrAdvE.cat~BMI+weight,data = CrohnD1,family = binomial)
+probs<-predict(fit4,newdata = test,type="response")
+diags<-rbind(diags,class_diag(probs,truth))
+}
+summarize_all(diags,mean)
+```
+
+
+
+A logistic regression was run in order to predict the binary categorial variable which in this cases is # of adverse event which is either low or high. The coefficient for BMI suggests that going up 1 BMI unit increases the log-odds by 0.309 while on the other hand the coefficient for weight suggests that, going up 1lb in weight decreases the log-odd by 0.0869. 0.07415123 represents the probability of a high # of adverse events if BMI and weight are zero.  Next, a confusion matrix was produced for this logistic regression. The proportion of correctly classified cases (low or high ) (Accuracy) was 0.914. The proportion of correctly classified low cases (Sensitivity) was 1. The proportion of correctly classified high cases (Specificity) was 0.0909. The precision (positive predictive value) was 0.9137. Next, A ROC curve was generated to calculate AUC. The AUC was 0.7431389. Since the AUC is used to quantify how well we are predicting overall, 0.7431389 is a fair value and suggests that our predictions are for the most part good. A 10-fold CV test produced the following values: Acc=0.9159, Sens=NaN,Spec=1,Ppv=NaN and Auc=0.544. The values for acc, was very similar to that calculated from the confusion matrix. Furthermore, the auc value produced from the ROC curve was very similar to that produced from the 10-fold CV test. 
+
+```{R}
+#6. Lasso reggression
+
+cat <- CrohnD[order(CrohnD$nrAdvE),]
+nrAdvE.new <- cut(CrohnD$nrAdvE, breaks=2, labels=c("low","high"))
+head(nrAdvE.new)
+CrohnD$nrAdvE.cat <- nrAdvE.new
+head(CrohnD)
+CrohnD1<-CrohnD%>%mutate(nrAdvE.cat=ifelse(nrAdvE.cat=="high",1,0))
+
+y<-as.matrix(CrohnD1$nrAdvE.cat) 
+x<-model.matrix(nrAdvE.cat~.,data=CrohnD1)[,-1]
+head(x)
+head(y)
+cv <- cv.glmnet(x,y)
+cv<-cv.glmnet(x,y,family="binomial")
+lasso<-glmnet(x,y,family="binomial",lambda=cv$lambda.1se)
+coef(lasso)
+glimpse(lasso)
+
+set.seed(1234)
+k=10
+data1<-CrohnD1[sample(nrow(CrohnD1)),]
+folds<-cut(seq(1:nrow(CrohnD1)),breaks=k,labels=F)
+diags2<-NULL
+for(i in 1:k){
+train2<-data1[folds!=i,]
+test2<-data1[folds==i,]
+truth2<-test$nrAdvE.cat
+fit6<- glm(nrAdvE.cat~BMI+age,data=train, family="binomial"(link="logit"))
+probs2<- predict(fit6, newdata=test, type="response")
+diags2<-rbind(diags2,class_diag(probs2,truth2))}
+
+apply(diags2,2,mean)
+```
+The results from the lasso regression suggest that BMI, and age are the most predictive variable for number of the high/low adverse events (I am ignoring nrAdve as that is the acutal # of adverse events). The results of the 10-fold CV test using this model(using only BMI and age) was the following: acc= 0.9166667, sens:0.00, spec=1.00, ppv=NaN, and auc=0.8181818. This model's out-of-sample accuracy was kind of similar to that produced for the logisitc regression in question 5. 

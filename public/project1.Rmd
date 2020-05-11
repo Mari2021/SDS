@@ -1,0 +1,125 @@
+---
+title: "Project 1: SDS 348 Project: 1 Exploratory Data Analysis" 
+by: "Yemariamwork Engidaw (yde68)"
+Date: "03/15/2020"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+  
+---
+```{r global_options, include=FALSE}
+library(latticeExtra)
+library(fivethirtyeight)
+library(knitr)
+
+```
+Introduction: I will be using two different datasets from R-studio. The first dataset that I will be using is called bad_drivers. This dataset contains 51 observations and 8 variables. The 8 variables are num_drivers, perc_speeding (percent of drivers that were speeding), perc_alchol (percent of fatal collisons due to alcohol), perc_not_distracted (percent of drivers that were not distracted causing a fatal collison), perc_no_previous (percent of drivers with no previous fatal collisons), insurance_premiums, lossess (loss incured by insurance company). The second dataset that I will be using is called "us_rent_income." It contains 104 observations and 4 variables. The 4 variables are GEOID, NAME, variable (rent/income), estimate (estimated value) and moe (90% margin of error). I chose to delete the variable GEOID as I did not believe it to be a significant factor since state is already a variable. Despite the fact that these two variable do not at first glance appear to be related, I am interested in seeing if there are any correlations between the number of drivers per state and the average income/rent for that state.
+---
+```{R}
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(devtools)
+```
+
+
+# 1. Dataset tidying/untidying 
+
+```{R}
+
+library(fda)
+data("bad_drivers")
+data("us_rent_income")
+us_rent_income$GEOID <- NULL
+us_rent_income <-(us_rent_income%>% rename(state = NAME))
+
+bad_drivers3<-bad_drivers%>%pivot_longer(cols = c("insurance_premiums","losses"),
+names_to = "insurance premiums/insurance losses",
+values_to="Insurance Related Costs")
+glimpse(bad_drivers3)
+
+
+```
+I decided to tidy my data by combining the variables insurance_premium and losses together since they both relate to insurance payments. The new column was insurance premium/insurance losses while the new combined value name for the columns was Insurance Related Costs. 
+
+#2. Joining 
+```{R}
+library(tidyverse)
+
+driver_us <-full_join(bad_drivers3,us_rent_income,by="state")
+glimpse(driver_us)
+
+```
+I chose to perform a full join in order to merge my two datasets. Since I didn't need to drop any original data, a full merge was sufficient. 
+
+
+#3. Summary Statics
+
+```{R}
+
+driver_us %>% filter(state== "Nevada")%>%glimpse()
+
+driver_us %>% slice(1:6)
+
+driver_us %>% arrange(desc(state), desc(perc_alcohol), desc(`Insurance Related Costs`))
+
+driver_us%>%select(state, perc_alcohol)
+
+driver_us %>% mutate(average = perc_alcohol/perc_no_previous)
+
+driver_us %>% summarize(mean(num_drivers, na.rm=T), n(), n_distinct(state))
+
+driver_us %>% group_by(state) %>% summarize(mean_num=mean(num_drivers), mean_alco_noNA=mean(perc_alcohol))
+
+```
+Here, all six core dplyr functions were used to generate a summary statistic. First, filter() was used to pull forward rows where Nevada was the state of choice. Next, slice() was used to pull forward the first six observations from the combined dataset. Next, arrange was used to list the variables state, per_alchol, and Insurance Related Costs in reverse order. Next, I used the function select() to specifically pull forward the two variables state and perc_alcohol. Next, mutate() was used to create a new variable that equaled per_alcohol/per_no_previous. Next, summarize() was used to find the mean of num_driver in the United States. Finally, I used groub_by() to group by state and then summarize to find the mean num_drivers and perc_alcohol. 
+
+
+#4. Visualization
+
+```{R}
+
+driver_us%>%select_if(is.numeric)%>%cor%>%as.data.frame%>%
+rownames_to_column%>%pivot_longer(-1)%>%
+ggplot(aes(rowname,name,fill=value))+geom_tile()+
+geom_text(aes(label=round(value,2)))+
+xlab("")+ylab("") 
+ 
+library(ggplot2)
+
+ggplot(driver_us, aes(state,num_drivers))+
+  geom_point(aes(color=estimate, size=perc_speeding)) + ggtitle("Distribution of Number of Drivers that speed by State")
+
+ggplot(data =driver_us, aes(x=state,y=estimate,color=num_drivers)) + geom_point(size=2, stat = "summary",fun.y="mean") +
+ggtitle("Distribution of Number of Drivers Distribution") + stat_summary(size=.2,color='Blue')
+
+
+```
+The first graph created was a heatmap. No correlation was observed. The second graph that I created plotted the numbers of drivers for every state. Futhermore, I also incorporated the variables perc_speeding and estimate. Thus, this graph illustrates for us the distribution of the number of drivers in every state as well as the percent of these drivers that speed and finally the average income of people for that state.As we can see, there is a small correlation between the number of drivers and the number of drivers that speed. However, we see that there is no correlation between the number of drivers and estimated income/rent.The third graph created was a distribution graph using the variables state, estimated income/rent and number of drivers. Again, we see that this distribution is pretty evenly spread out around the same range. There is no direct relationship between number of drivers and estimated income/rent. 
+
+#5. Clustering 
+
+```{R}
+library(cluster)
+#driver_us%>%ggplot()+geom_point(aes(num_drivers, perc_speeding))
+#driver_us%>%select_if(is.numeric)%>%cov
+#driver_us%>%select_if(is.numeric)%>%cov%>%round(2)
+#driver_us%>%select_if(is.numeric)%>%scale%>%cov%>%round(4)
+ggplot(driver_us,aes(x=num_drivers,y=perc_speeding))+geom_point()+coord_fixed()
+driver_us2<-driver_us%>%select(-variable,-`insurance premiums/insurance losses`,-state)%>%na.omit
+driver_us_nums<-driver_us2%>%select_if(is.numeric)%>%scale()
+driver_us_pca<-princomp(driver_us_nums)
+summary(driver_us_pca,loadings=T)
+eigen(cor(driver_us_nums))
+
+ggplot()+geom_point(aes(driver_us_pca$scores[,1],driver_us_pca$scores[,2]))+xlab("DC1")+ylab("DC2")
+
+driver_us_pca$loadings[1:7,1:2]%>%as.data.frame%>%rownames_to_column%>%
+ggplot()+geom_hline(aes(yintercept=0),lty=2)+
+geom_vline(aes(xintercept=0),lty=2)+ylab("DC2")+xlab("DC1")+
+geom_segment(aes(x=0,y=0,xend=Comp.1,yend=Comp.2),arrow=arrow(),col="red")+
+geom_label(aes(x=Comp.1*1.1,y=Comp.2*1.1,label=rowname))
+
+```
+As we can see, we can make some general statements about the variables in the merged dataset. For example, because the variables Insurance Related Costs, perc_no_previous, perc_no_distracted, perc_speeding and perc_alcohol are close to zero, we can assume that they are not largely contributing factors, nor related. However, we can see that there is a stong connection from the variable estimate since it is closer to -1. With this being said, it can also be stated that perc_alcohol, perc_speeding and per_no_distracted are highly correlated since the angles that they form are relatively small. The opposite can be said about perc_no_previous and estimate. 

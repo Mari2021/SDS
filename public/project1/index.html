@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Yemariamwork Engidaw" />
+    <meta name="description" content="Describe your website">
+    <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
+    <title>Project 1: SDS 348 Project: 1 Exploratory Data Analysis</title>
+    <meta name="generator" content="Hugo 0.70.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="/blog/">BLOG</a></li>
+        
+        <li><a href="/projects/">PROJECTS</a></li>
+        
+        <li><a href="/resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="/project1/">Project 1: SDS 348 Project: 1 Exploratory Data Analysis</a></strong>
+          </h3>
+        </div>
+        <div class="blog-title">
+          <h4>
+          January 1, 0001
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="introduction-i-will-be-using-two-different-datasets-from-r-studio.-the-first-dataset-that-i-will-be-using-is-called-bad_drivers.-this-dataset-contains-51-observations-and-8-variables.-the-8-variables-are-num_drivers-perc_speeding-percent-of-drivers-that-were-speeding-perc_alchol-percent-of-fatal-collisons-due-to-alcohol-perc_not_distracted-percent-of-drivers-that-were-not-distracted-causing-a-fatal-collison-perc_no_previous-percent-of-drivers-with-no-previous-fatal-collisons-insurance_premiums-lossess-loss-incured-by-insurance-company.-the-second-dataset-that-i-will-be-using-is-called-us_rent_income.-it-contains-104-observations-and-4-variables.-the-4-variables-are-geoid-name-variable-rentincome-estimate-estimated-value-and-moe-90-margin-of-error.-i-chose-to-delete-the-variable-geoid-as-i-did-not-believe-it-to-be-a-significant-factor-since-state-is-already-a-variable.-despite-the-fact-that-these-two-variable-do-not-at-first-glance-appear-to-be-related-i-am-interested-in-seeing-if-there-are-any-correlations-between-the-number-of-drivers-per-state-and-the-average-incomerent-for-that-state." class="section level2">
+<h2>Introduction: I will be using two different datasets from R-studio. The first dataset that I will be using is called bad_drivers. This dataset contains 51 observations and 8 variables. The 8 variables are num_drivers, perc_speeding (percent of drivers that were speeding), perc_alchol (percent of fatal collisons due to alcohol), perc_not_distracted (percent of drivers that were not distracted causing a fatal collison), perc_no_previous (percent of drivers with no previous fatal collisons), insurance_premiums, lossess (loss incured by insurance company). The second dataset that I will be using is called “us_rent_income.” It contains 104 observations and 4 variables. The 4 variables are GEOID, NAME, variable (rent/income), estimate (estimated value) and moe (90% margin of error). I chose to delete the variable GEOID as I did not believe it to be a significant factor since state is already a variable. Despite the fact that these two variable do not at first glance appear to be related, I am interested in seeing if there are any correlations between the number of drivers per state and the average income/rent for that state.</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.0     ✓ purrr   0.3.4
+## ✓ tibble  3.0.1     ✓ dplyr   0.8.5
+## ✓ tidyr   1.0.3     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.5.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter()  masks stats::filter()
+## x dplyr::lag()     masks stats::lag()
+## x ggplot2::layer() masks latticeExtra::layer()</code></pre>
+<pre class="r"><code>library(tidyr)
+library(dplyr)
+library(devtools)</code></pre>
+<pre><code>## Loading required package: usethis</code></pre>
+</div>
+<div id="dataset-tidyinguntidying" class="section level1">
+<h1>1. Dataset tidying/untidying</h1>
+<pre class="r"><code>library(fda)</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## 
+## Attaching package: &#39;Matrix&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:tidyr&#39;:
+## 
+##     expand, pack, unpack</code></pre>
+<pre><code>## 
+## Attaching package: &#39;fda&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:lattice&#39;:
+## 
+##     melanoma</code></pre>
+<pre><code>## The following object is masked from &#39;package:graphics&#39;:
+## 
+##     matplot</code></pre>
+<pre class="r"><code>data(&quot;bad_drivers&quot;)
+data(&quot;us_rent_income&quot;)
+us_rent_income$GEOID &lt;- NULL
+us_rent_income &lt;-(us_rent_income%&gt;% rename(state = NAME))
+
+bad_drivers3&lt;-bad_drivers%&gt;%pivot_longer(cols = c(&quot;insurance_premiums&quot;,&quot;losses&quot;),
+names_to = &quot;insurance premiums/insurance losses&quot;,
+values_to=&quot;Insurance Related Costs&quot;)
+glimpse(bad_drivers3)</code></pre>
+<pre><code>## Rows: 102
+## Columns: 8
+## $ state                                 &lt;chr&gt; &quot;Alabama&quot;, &quot;Alabama&quot;, &quot;Alaska&quot;,…
+## $ num_drivers                           &lt;dbl&gt; 18.8, 18.8, 18.1, 18.1, 18.6, 1…
+## $ perc_speeding                         &lt;int&gt; 39, 39, 41, 41, 35, 35, 18, 18,…
+## $ perc_alcohol                          &lt;int&gt; 30, 30, 25, 25, 28, 28, 26, 26,…
+## $ perc_not_distracted                   &lt;int&gt; 96, 96, 90, 90, 84, 84, 94, 94,…
+## $ perc_no_previous                      &lt;int&gt; 80, 80, 94, 94, 96, 96, 95, 95,…
+## $ `insurance premiums/insurance losses` &lt;chr&gt; &quot;insurance_premiums&quot;, &quot;losses&quot;,…
+## $ `Insurance Related Costs`             &lt;dbl&gt; 784.55, 145.08, 1053.48, 133.93…</code></pre>
+<p>I decided to tidy my data by combining the variables insurance_premium and losses together since they both relate to insurance payments. The new column was insurance premium/insurance losses while the new combined value name for the columns was Insurance Related Costs.</p>
+<p>#2. Joining</p>
+<pre class="r"><code>library(tidyverse)
+
+driver_us &lt;-full_join(bad_drivers3,us_rent_income,by=&quot;state&quot;)
+glimpse(driver_us)</code></pre>
+<pre><code>## Rows: 206
+## Columns: 11
+## $ state                                 &lt;chr&gt; &quot;Alabama&quot;, &quot;Alabama&quot;, &quot;Alabama&quot;…
+## $ num_drivers                           &lt;dbl&gt; 18.8, 18.8, 18.8, 18.8, 18.1, 1…
+## $ perc_speeding                         &lt;int&gt; 39, 39, 39, 39, 41, 41, 41, 41,…
+## $ perc_alcohol                          &lt;int&gt; 30, 30, 30, 30, 25, 25, 25, 25,…
+## $ perc_not_distracted                   &lt;int&gt; 96, 96, 96, 96, 90, 90, 90, 90,…
+## $ perc_no_previous                      &lt;int&gt; 80, 80, 80, 80, 94, 94, 94, 94,…
+## $ `insurance premiums/insurance losses` &lt;chr&gt; &quot;insurance_premiums&quot;, &quot;insuranc…
+## $ `Insurance Related Costs`             &lt;dbl&gt; 784.55, 784.55, 145.08, 145.08,…
+## $ variable                              &lt;chr&gt; &quot;income&quot;, &quot;rent&quot;, &quot;income&quot;, &quot;re…
+## $ estimate                              &lt;dbl&gt; 24476, 747, 24476, 747, 32940, …
+## $ moe                                   &lt;dbl&gt; 136, 3, 136, 3, 508, 13, 508, 1…</code></pre>
+<p>I chose to perform a full join in order to merge my two datasets. Since I didn’t need to drop any original data, a full merge was sufficient.</p>
+<p>#3. Summary Statics</p>
+<pre class="r"><code>driver_us %&gt;% filter(state== &quot;Nevada&quot;)%&gt;%glimpse()</code></pre>
+<pre><code>## Rows: 4
+## Columns: 11
+## $ state                                 &lt;chr&gt; &quot;Nevada&quot;, &quot;Nevada&quot;, &quot;Nevada&quot;, &quot;…
+## $ num_drivers                           &lt;dbl&gt; 14.7, 14.7, 14.7, 14.7
+## $ perc_speeding                         &lt;int&gt; 37, 37, 37, 37
+## $ perc_alcohol                          &lt;int&gt; 32, 32, 32, 32
+## $ perc_not_distracted                   &lt;int&gt; 95, 95, 95, 95
+## $ perc_no_previous                      &lt;int&gt; 99, 99, 99, 99
+## $ `insurance premiums/insurance losses` &lt;chr&gt; &quot;insurance_premiums&quot;, &quot;insuranc…
+## $ `Insurance Related Costs`             &lt;dbl&gt; 1029.87, 1029.87, 138.71, 138.71
+## $ variable                              &lt;chr&gt; &quot;income&quot;, &quot;rent&quot;, &quot;income&quot;, &quot;re…
+## $ estimate                              &lt;dbl&gt; 29019, 1017, 29019, 1017
+## $ moe                                   &lt;dbl&gt; 213, 6, 213, 6</code></pre>
+<pre class="r"><code>driver_us %&gt;% slice(1:6)</code></pre>
+<pre><code>## # A tibble: 6 x 11
+##   state num_drivers perc_speeding perc_alcohol perc_not_distra… perc_no_previous
+##   &lt;chr&gt;       &lt;dbl&gt;         &lt;int&gt;        &lt;int&gt;            &lt;int&gt;            &lt;int&gt;
+## 1 Alab…        18.8            39           30               96               80
+## 2 Alab…        18.8            39           30               96               80
+## 3 Alab…        18.8            39           30               96               80
+## 4 Alab…        18.8            39           30               96               80
+## 5 Alas…        18.1            41           25               90               94
+## 6 Alas…        18.1            41           25               90               94
+## # … with 5 more variables: `insurance premiums/insurance losses` &lt;chr&gt;,
+## #   `Insurance Related Costs` &lt;dbl&gt;, variable &lt;chr&gt;, estimate &lt;dbl&gt;, moe &lt;dbl&gt;</code></pre>
+<pre class="r"><code>driver_us %&gt;% arrange(desc(state), desc(perc_alcohol), desc(`Insurance Related Costs`))</code></pre>
+<pre><code>## # A tibble: 206 x 11
+##    state num_drivers perc_speeding perc_alcohol perc_not_distra…
+##    &lt;chr&gt;       &lt;dbl&gt;         &lt;int&gt;        &lt;int&gt;            &lt;int&gt;
+##  1 Wyom…        17.4            42           32               81
+##  2 Wyom…        17.4            42           32               81
+##  3 Wyom…        17.4            42           32               81
+##  4 Wyom…        17.4            42           32               81
+##  5 Wisc…        13.8            36           33               39
+##  6 Wisc…        13.8            36           33               39
+##  7 Wisc…        13.8            36           33               39
+##  8 Wisc…        13.8            36           33               39
+##  9 West…        23.8            34           28               97
+## 10 West…        23.8            34           28               97
+## # … with 196 more rows, and 6 more variables: perc_no_previous &lt;int&gt;,
+## #   `insurance premiums/insurance losses` &lt;chr&gt;, `Insurance Related
+## #   Costs` &lt;dbl&gt;, variable &lt;chr&gt;, estimate &lt;dbl&gt;, moe &lt;dbl&gt;</code></pre>
+<pre class="r"><code>driver_us%&gt;%select(state, perc_alcohol)</code></pre>
+<pre><code>## # A tibble: 206 x 2
+##    state   perc_alcohol
+##    &lt;chr&gt;          &lt;int&gt;
+##  1 Alabama           30
+##  2 Alabama           30
+##  3 Alabama           30
+##  4 Alabama           30
+##  5 Alaska            25
+##  6 Alaska            25
+##  7 Alaska            25
+##  8 Alaska            25
+##  9 Arizona           28
+## 10 Arizona           28
+## # … with 196 more rows</code></pre>
+<pre class="r"><code>driver_us %&gt;% mutate(average = perc_alcohol/perc_no_previous)</code></pre>
+<pre><code>## # A tibble: 206 x 12
+##    state num_drivers perc_speeding perc_alcohol perc_not_distra…
+##    &lt;chr&gt;       &lt;dbl&gt;         &lt;int&gt;        &lt;int&gt;            &lt;int&gt;
+##  1 Alab…        18.8            39           30               96
+##  2 Alab…        18.8            39           30               96
+##  3 Alab…        18.8            39           30               96
+##  4 Alab…        18.8            39           30               96
+##  5 Alas…        18.1            41           25               90
+##  6 Alas…        18.1            41           25               90
+##  7 Alas…        18.1            41           25               90
+##  8 Alas…        18.1            41           25               90
+##  9 Ariz…        18.6            35           28               84
+## 10 Ariz…        18.6            35           28               84
+## # … with 196 more rows, and 7 more variables: perc_no_previous &lt;int&gt;,
+## #   `insurance premiums/insurance losses` &lt;chr&gt;, `Insurance Related
+## #   Costs` &lt;dbl&gt;, variable &lt;chr&gt;, estimate &lt;dbl&gt;, moe &lt;dbl&gt;, average &lt;dbl&gt;</code></pre>
+<pre class="r"><code>driver_us %&gt;% summarize(mean(num_drivers, na.rm=T), n(), n_distinct(state))</code></pre>
+<pre><code>## # A tibble: 1 x 3
+##   `mean(num_drivers, na.rm = T)` `n()` `n_distinct(state)`
+##                            &lt;dbl&gt; &lt;int&gt;               &lt;int&gt;
+## 1                           15.8   206                  52</code></pre>
+<pre class="r"><code>driver_us %&gt;% group_by(state) %&gt;% summarize(mean_num=mean(num_drivers), mean_alco_noNA=mean(perc_alcohol))</code></pre>
+<pre><code>## # A tibble: 52 x 3
+##    state                mean_num mean_alco_noNA
+##    &lt;chr&gt;                   &lt;dbl&gt;          &lt;dbl&gt;
+##  1 Alabama                  18.8             30
+##  2 Alaska                   18.1             25
+##  3 Arizona                  18.6             28
+##  4 Arkansas                 22.4             26
+##  5 California               12               28
+##  6 Colorado                 13.6             28
+##  7 Connecticut              10.8             36
+##  8 Delaware                 16.2             30
+##  9 District of Columbia      5.9             27
+## 10 Florida                  17.9             29
+## # … with 42 more rows</code></pre>
+<p>Here, all six core dplyr functions were used to generate a summary statistic. First, filter() was used to pull forward rows where Nevada was the state of choice. Next, slice() was used to pull forward the first six observations from the combined dataset. Next, arrange was used to list the variables state, per_alchol, and Insurance Related Costs in reverse order. Next, I used the function select() to specifically pull forward the two variables state and perc_alcohol. Next, mutate() was used to create a new variable that equaled per_alcohol/per_no_previous. Next, summarize() was used to find the mean of num_driver in the United States. Finally, I used groub_by() to group by state and then summarize to find the mean num_drivers and perc_alcohol.</p>
+<p>#4. Visualization</p>
+<pre class="r"><code>driver_us%&gt;%select_if(is.numeric)%&gt;%cor%&gt;%as.data.frame%&gt;%
+rownames_to_column%&gt;%pivot_longer(-1)%&gt;%
+ggplot(aes(rowname,name,fill=value))+geom_tile()+
+geom_text(aes(label=round(value,2)))+
+xlab(&quot;&quot;)+ylab(&quot;&quot;) </code></pre>
+<pre><code>## Warning: Removed 56 rows containing missing values (geom_text).</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code>library(ggplot2)
+
+ggplot(driver_us, aes(state,num_drivers))+
+  geom_point(aes(color=estimate, size=perc_speeding)) + ggtitle(&quot;Distribution of Number of Drivers that speed by State&quot;)</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values (geom_point).</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
+<pre class="r"><code>ggplot(data =driver_us, aes(x=state,y=estimate,color=num_drivers)) + geom_point(size=2, stat = &quot;summary&quot;,fun.y=&quot;mean&quot;) +
+ggtitle(&quot;Distribution of Number of Drivers Distribution&quot;) + stat_summary(size=.2,color=&#39;Blue&#39;)</code></pre>
+<pre><code>## Warning: Ignoring unknown parameters: fun.y</code></pre>
+<pre><code>## Warning: Removed 1 rows containing non-finite values (stat_summary).</code></pre>
+<pre><code>## No summary function supplied, defaulting to `mean_se()`</code></pre>
+<pre><code>## Warning: Removed 1 rows containing non-finite values (stat_summary).</code></pre>
+<pre><code>## No summary function supplied, defaulting to `mean_se()`</code></pre>
+<pre><code>## Warning: Removed 1 rows containing missing values (geom_segment).</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-5-3.png" width="672" />
+The first graph created was a heatmap. No correlation was observed. The second graph that I created plotted the numbers of drivers for every state. Futhermore, I also incorporated the variables perc_speeding and estimate. Thus, this graph illustrates for us the distribution of the number of drivers in every state as well as the percent of these drivers that speed and finally the average income of people for that state.As we can see, there is a small correlation between the number of drivers and the number of drivers that speed. However, we see that there is no correlation between the number of drivers and estimated income/rent.The third graph created was a distribution graph using the variables state, estimated income/rent and number of drivers. Again, we see that this distribution is pretty evenly spread out around the same range. There is no direct relationship between number of drivers and estimated income/rent.</p>
+<p>#5. Clustering</p>
+<pre class="r"><code>library(cluster)
+#driver_us%&gt;%ggplot()+geom_point(aes(num_drivers, perc_speeding))
+#driver_us%&gt;%select_if(is.numeric)%&gt;%cov
+#driver_us%&gt;%select_if(is.numeric)%&gt;%cov%&gt;%round(2)
+#driver_us%&gt;%select_if(is.numeric)%&gt;%scale%&gt;%cov%&gt;%round(4)
+ggplot(driver_us,aes(x=num_drivers,y=perc_speeding))+geom_point()+coord_fixed()</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values (geom_point).</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<pre class="r"><code>driver_us2&lt;-driver_us%&gt;%select(-variable,-`insurance premiums/insurance losses`,-state)%&gt;%na.omit
+driver_us_nums&lt;-driver_us2%&gt;%select_if(is.numeric)%&gt;%scale()
+driver_us_pca&lt;-princomp(driver_us_nums)
+summary(driver_us_pca,loadings=T)</code></pre>
+<pre><code>## Importance of components:
+##                           Comp.1    Comp.2    Comp.3    Comp.4    Comp.5
+## Standard deviation     1.3582484 1.2149463 1.0348863 1.0159377 0.9822492
+## Proportion of Variance 0.2317408 0.1854207 0.1345332 0.1296517 0.1211958
+## Cumulative Proportion  0.2317408 0.4171616 0.5516947 0.6813465 0.8025422
+##                           Comp.6     Comp.7    Comp.8
+## Standard deviation     0.9315331 0.72523879 0.4221296
+## Proportion of Variance 0.1090036 0.06607029 0.0223839
+## Cumulative Proportion  0.9115458 0.97761610 1.0000000
+## 
+## Loadings:
+##                         Comp.1 Comp.2 Comp.3 Comp.4 Comp.5 Comp.6 Comp.7 Comp.8
+## num_drivers              0.179  0.223  0.589  0.279  0.361  0.523  0.298       
+## perc_speeding                   0.457        -0.599 -0.423         0.485       
+## perc_alcohol                    0.621  0.305 -0.106  0.121 -0.304 -0.629       
+## perc_not_distracted             0.374 -0.556  0.137 -0.150  0.658 -0.274       
+## perc_no_previous        -0.130 -0.446  0.397 -0.418 -0.233  0.427 -0.452       
+## Insurance Related Costs               -0.272 -0.575  0.764                     
+## estimate                -0.678  0.106         0.153  0.117                0.696
+## moe                     -0.692                                           -0.708</code></pre>
+<pre class="r"><code>eigen(cor(driver_us_nums))</code></pre>
+<pre><code>## eigen() decomposition
+## $values
+## [1] 1.8539266 1.4833659 1.0762654 1.0372137 0.9695663 0.8720285 0.5285623
+## [8] 0.1790712
+## 
+## $vectors
+##             [,1]        [,2]        [,3]       [,4]        [,5]        [,6]
+## [1,]  0.17916803  0.22337627  0.58916053 -0.2793863 -0.36087713  0.52321585
+## [2,] -0.06236917  0.45711264  0.09870680  0.5988924  0.42318412  0.05002143
+## [3,]  0.07965928  0.62142849  0.30460354  0.1062300 -0.12116969 -0.30390124
+## [4,] -0.01908897  0.37405538 -0.55583358 -0.1374671  0.15001553  0.65839324
+## [5,] -0.13036207 -0.44627913  0.39740520  0.4184785  0.23292852  0.42734659
+## [6,] -0.03153938 -0.03319126 -0.27234803  0.5747318 -0.76391130  0.09461850
+## [7,] -0.67814594  0.10614963  0.05008231 -0.1528244 -0.11734476 -0.06021694
+## [8,] -0.69240740  0.05937853  0.08246195 -0.0655198 -0.04370563  0.05197668
+##             [,7]         [,8]
+## [1,] -0.29795212 -0.008509579
+## [2,] -0.48451901 -0.048962701
+## [3,]  0.62856871  0.035724238
+## [4,]  0.27403615 -0.028069102
+## [5,]  0.45161035 -0.099763655
+## [6,] -0.02995396  0.001755880
+## [7,] -0.02960919 -0.696214217
+## [8,] -0.02335758  0.707669442</code></pre>
+<pre class="r"><code>ggplot()+geom_point(aes(driver_us_pca$scores[,1],driver_us_pca$scores[,2]))+xlab(&quot;DC1&quot;)+ylab(&quot;DC2&quot;)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
+<pre class="r"><code>driver_us_pca$loadings[1:7,1:2]%&gt;%as.data.frame%&gt;%rownames_to_column%&gt;%
+ggplot()+geom_hline(aes(yintercept=0),lty=2)+
+geom_vline(aes(xintercept=0),lty=2)+ylab(&quot;DC2&quot;)+xlab(&quot;DC1&quot;)+
+geom_segment(aes(x=0,y=0,xend=Comp.1,yend=Comp.2),arrow=arrow(),col=&quot;red&quot;)+
+geom_label(aes(x=Comp.1*1.1,y=Comp.2*1.1,label=rowname))</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-6-3.png" width="672" />
+As we can see, we can make some general statements about the variables in the merged dataset. For example, because the variables Insurance Related Costs, perc_no_previous, perc_no_distracted, perc_speeding and perc_alcohol are close to zero, we can assume that they are not largely contributing factors, nor related. However, we can see that there is a stong connection from the variable estimate since it is closer to -1. With this being said, it can also be stated that perc_alcohol, perc_speeding and per_no_distracted are highly correlated since the angles that they form are relatively small. The opposite can be said about perc_no_previous and estimate.</p>
+</div>
+
+              <hr>
+              <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div>
+            </div>
+          </div>
+          <hr>
+        <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+        </div>
+      </div>
+      
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="/js/docs.min.js"></script>
+<script src="/js/main.js"></script>
+
+<script src="/js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>
