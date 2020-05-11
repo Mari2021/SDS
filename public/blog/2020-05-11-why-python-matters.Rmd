@@ -44,7 +44,7 @@ The core python data science stacks are the following:
 
 -Scikit-learn:machine learning in Python
 
-We can import numpy in order to gain access to a suite of functions. This will alow us to perform basic calculations as well as assign values to variables. A basic understanding of python gives us access to a large pool of tools that we can use to analyze data and create simple functions.  
+We can import numpy in order to gain access to a suite of functions. This will allow us to perform basic calculations as well as assign values to variables. A basic understanding of python gives us access to a large pool of tools that we can use to analyze data and create simple functions.  
 ```{python}
 import numpy as np
 x=np.array([1,2,3])
@@ -52,7 +52,7 @@ x
 print(x/2+1) #vectorized arithmetic
 x.shape #size of array (attribute)
 ```
-Python is a very efficient language that allows us to run very complex codes as well. Gene sequencing can be conducted by using Python. We can create a function that takes a string of nucleotides as inputs and returns dictionary with all 3-mers presents in that string, and the number of times that each 3-mer occurs. 
+Python is a very efficient language that allows us to run very complex codes as well. Gene sequencing can be conducted by using Python. We can create a function that takes a string of nucleotides as inputs and returns a dictionary with all 3-mers present in that string.Furthermore, this function can also inform us about the number of times that each 3-mer occurs. 
 
 ```{python}
 
