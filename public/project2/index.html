@@ -7,7 +7,7 @@
     <meta name="author" content="Yemariamwork Engidaw" />
     <meta name="description" content="Describe your website">
     <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
-    <title>Project 2:Modeling,Testing,and Predicting</title>
+    <title>Project 2: Modeling, Inference, Prediction</title>
     <meta name="generator" content="Hugo 0.70.0" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="/css/main.css" />
@@ -56,7 +56,7 @@
       <div class="container">
         <div class="blog-post">
           <h3>
-            <strong><a href="/project2/">Project 2:Modeling,Testing,and Predicting</a></strong>
+            <strong><a href="/project2/">Project 2: Modeling, Inference, Prediction</a></strong>
           </h3>
         </div>
         <div class="blog-title">
@@ -170,8 +170,8 @@ head(cron)</code></pre>
 <pre class="r"><code>head(perm1&lt;-data.frame(condition=cron$condition,adevent=sample(cron$adevent)))</code></pre>
 <pre><code>##   condition adevent
 ## 1   placebo       0
-## 2   placebo       4
-## 3   placebo       0
+## 2   placebo       0
+## 3   placebo       2
 ## 4   placebo       0
 ## 5   placebo       2
 ## 6   placebo       0</code></pre>
@@ -179,14 +179,14 @@ head(cron)</code></pre>
 <pre><code>## # A tibble: 1 x 1
 ##   `mean_diff:`
 ##          &lt;dbl&gt;
-## 1          0.1</code></pre>
+## 1         -1.6</code></pre>
 <pre class="r"><code>rand_dist&lt;-vector()
 for(i in 1:5000){
 new&lt;-data.frame(adevent=sample(cron$adevent),condition=cron$condition)
 rand_dist[i]&lt;-mean(new[new$condition==&quot;d1&quot;,]$adevent)-
 mean(new[new$condition==&quot;placebo&quot;,]$adevent)}
 mean(rand_dist&gt;1.965542 | rand_dist&lt; -1.965542)</code></pre>
-<pre><code>## [1] 0.0054</code></pre>
+<pre><code>## [1] 0.005</code></pre>
 <pre class="r"><code>{hist(rand_dist,main=&quot;&quot;,ylab=&quot;&quot;); abline(v = 1.965542,col=&quot;red&quot;)}</code></pre>
 <p><img src="/project2_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
 <pre class="r"><code>t.test(data=cron,adevent~condition)</code></pre>
@@ -396,7 +396,7 @@ coef(fit)
 })
 samp_distn%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
 <pre><code>##   (Intercept)        BMI      weight   BMI:weight
-## 1  0.03061301 0.01084088 0.003341042 0.0002018651</code></pre>
+## 1  0.03081038 0.01087623 0.003390264 0.0002077326</code></pre>
 <pre class="r"><code>fit2&lt;-lm(nrAdvE.cat~BMI*weight,data=CrohnD1)
 summary(fit2)</code></pre>
 <pre><code>## 
@@ -429,16 +429,16 @@ fit2&lt;-lm(new_y ~ BMI*weight, data = newdat)
 coef(fit2)
 })
 resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
-<pre><code>##   (Intercept)         BMI      weight   BMI:weight
-## 1  0.02810296 0.009260475 0.003183604 0.0002330787</code></pre>
+<pre><code>##   (Intercept)         BMI     weight   BMI:weight
+## 1  0.02838123 0.009156001 0.00316146 0.0002322911</code></pre>
 <pre class="r"><code>resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%gather%&gt;%group_by(key)%&gt;% summarize(lower=quantile(value,.025), upper=quantile(value,0.975))</code></pre>
 <pre><code>## # A tibble: 4 x 3
 ##   key             lower     upper
 ##   &lt;chr&gt;           &lt;dbl&gt;     &lt;dbl&gt;
-## 1 (Intercept)  0.0619    0.172   
-## 2 BMI          0.0194    0.0575  
-## 3 BMI:weight  -0.000719  0.000205
-## 4 weight      -0.0151   -0.00218</code></pre>
+## 1 (Intercept)  0.0633    0.173   
+## 2 BMI          0.0202    0.0576  
+## 3 BMI:weight  -0.000728  0.000176
+## 4 weight      -0.0149   -0.00241</code></pre>
 <pre class="r"><code>coeftest(fit2)[,1:2]</code></pre>
 <pre><code>##                  Estimate   Std. Error
 ## (Intercept)  0.1135856789 0.0290633392
@@ -453,10 +453,10 @@ resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
 ## BMI:weight  -0.0003378149 0.0001728742</code></pre>
 <pre class="r"><code>samp_distn%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
 <pre><code>##   (Intercept)        BMI      weight   BMI:weight
-## 1  0.03061301 0.01084088 0.003341042 0.0002018651</code></pre>
+## 1  0.03081038 0.01087623 0.003390264 0.0002077326</code></pre>
 <pre class="r"><code>resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
-<pre><code>##   (Intercept)         BMI      weight   BMI:weight
-## 1  0.02810296 0.009260475 0.003183604 0.0002330787</code></pre>
+<pre><code>##   (Intercept)         BMI     weight   BMI:weight
+## 1  0.02838123 0.009156001 0.00316146 0.0002322911</code></pre>
 <p>I did not observe any changes in SEs when this regression model was reran to compute bootstrapped standard error. Furthermore, there were no changes in the p-value since both regression models produced very similar outputs.</p>
 <pre class="r"><code>#5.Logistic Regression Model
 
